@@ -1,6 +1,6 @@
 {
-    "name": "electron-react-typescript",
-    "version": "0.0.6",
+    "name": "collection-explorer",
+    "version": "0.0.1",
     "description": "",
     "main": "./dist/main.js",
     "scripts": {
@@ -59,17 +59,17 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+ssh://git@github.com:Robinfr/electron-react-typescript.git"
+        "url": "git+ssh://git@github.com:newswangerd/collection-explorer.git"
     },
     "author": {
-        "name": "Your name",
-        "email": "Your email"
+        "name": "David Newswanger",
+        "email": "davidn@redhat.com"
     },
     "license": "SEE LICENSE",
     "bugs": {
-        "url": "https://github.com/Robinfr/electron-react-typescript/issues"
+        "url": "https://github.com/newswangerd/collection-explorer/issues"
     },
-    "homepage": "https://github.com/Robinfr/electron-react-typescript",
+    "homepage": "https://github.com/newswangerd/collection-explorer",
     "devDependencies": {
         "@babel/core": "^7.7.2",
         "@babel/plugin-proposal-class-properties": "^7.7.0",
