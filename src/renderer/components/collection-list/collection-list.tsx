@@ -1,7 +1,5 @@
 import * as React from 'react';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
+import './collection-list.scss';
 
 export class CollectionFileType {
     name: string;
@@ -18,15 +16,14 @@ interface IProps {
 export class CollectionList extends React.Component<IProps, {}> {
     render() {
         return (
-            <div className="pf-c-content">
+            <div className="pf-c-content collection-list">
+                Colletions
                 <ul>
                     {this.props.collectionList.map((v, i) => (
-                        <li
-                            style={{ cursor: 'pointer' }}
-                            key={i}
-                            onClick={() => this.props.selectCollection(v)}
-                        >
-                            {v.namespace}.{v.name}
+                        <li style={{ cursor: 'pointer' }} key={i}>
+                            <a onClick={() => this.props.selectCollection(v)}>
+                                {v.namespace}.{v.name}
+                            </a>
                         </li>
                     ))}
                 </ul>

@@ -5,7 +5,17 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
+import { Button, Tooltip } from '@patternfly/react-core';
+import { RedoIcon } from '@patternfly/react-icons';
+
 import { CollectionDocs, CollectionList, CollectionFileType } from '../components';
+
+enum View {
+    docs = 'docs',
+    load = 'load',
+    loading = 'loading',
+    error = 'error'
+}
 
 interface IState {
     collection: any;
@@ -13,6 +23,7 @@ interface IState {
     selectedCollection: CollectionFileType;
     selectedName: string;
     selectedType: string;
+    view: View;
 }
 
 // renders markdown files in collection docs/ directory
@@ -27,7 +38,8 @@ export class CollectionLoader extends React.Component<{}, IState> {
             collectionList: [],
             selectedCollection: undefined,
             selectedName: '',
-            selectedType: 'docs'
+            selectedType: 'docs',
+            view: null
         };
 
         this.docsRef = React.createRef();
@@ -52,13 +64,51 @@ export class CollectionLoader extends React.Component<{}, IState> {
                         }
                     />
                 </div>
-                {collection && (
-                    <div>
-                        <CollectionDocs collection={this.state.collection} />
-                    </div>
-                )}
+                <div className="docs-col">{this.renderDocColumn()}</div>
             </div>
         );
+    }
+
+    private renderDocColumn() {
+        const { collection, collectionList, selectedCollection } = this.state;
+
+        switch (this.state.view) {
+            case View.docs:
+                return (
+                    <div>
+                        <div className="collection-header">
+                            <div className="pf-c-content">
+                                <h1>
+                                    {selectedCollection.namespace}.{selectedCollection.name}
+                                </h1>
+                            </div>
+                            <div>
+                                <Tooltip content="Reload Collection" entryDelay={0}>
+                                    <RedoIcon
+                                        className="reload-icon"
+                                        onClick={() => this.importCollection()}
+                                    />
+                                </Tooltip>
+                            </div>
+                        </div>
+                        <div>
+                            <CollectionDocs collection={this.state.collection} />
+                        </div>
+                    </div>
+                );
+            case View.load:
+                return (
+                    <div>
+                        <Button onClick={() => this.importCollection()}>
+                            Load {selectedCollection.namespace}.{selectedCollection.name}
+                        </Button>
+                    </div>
+                );
+            case View.loading:
+                return <div>Loading collection</div>;
+            case View.error:
+                return <div>Error loading colleciton</div>;
+        }
     }
 
     private loadCollectionList() {
@@ -83,35 +133,45 @@ export class CollectionLoader extends React.Component<{}, IState> {
         this.setState({ collectionList: collections });
     }
 
-    private loadCollectionDetail() {
-        try {
-            const data = JSON.parse(
-                fs
-                    .readFileSync(
-                        this.state.selectedCollection.path + '/_collection_explorer_cache.json'
-                    )
-                    .toString()
-            );
-            console.log(data);
-            this.setState({ collection: data });
-        } catch {
-            console.log('___________----____----___--___-___-____');
+    private loadCollectionCache(file) {
+        const data = JSON.parse(fs.readFileSync(file).toString());
+        return data;
+    }
+
+    private importCollection() {
+        this.setState({ view: View.loading }, () => {
             const p = spawn('python', [
                 'python/importer_wrapper.py',
                 this.state.selectedCollection.path
             ]);
 
-            const allData = [];
+            const consoleOut = [];
             p.stdout.on('data', data => {
-                allData.push(data);
+                consoleOut.push(data);
             });
             p.stderr.on('data', data => {
                 // console.error(`stderr: ${data}`);
             });
             p.on('exit', code => {
-                this.setState({ collection: JSON.parse(allData.join()) });
+                // this.setState({ collection: JSON.parse(allData.join()) });
                 // console.log(JSON.parse(allData.join()));
+
+                if (code === 0) {
+                    this.loadCollectionDetail();
+                } else {
+                    this.setState({ view: View.error });
+                }
             });
+        });
+    }
+
+    private loadCollectionDetail() {
+        const file = this.state.selectedCollection.path + '/_collection_explorer_cache.json';
+        try {
+            const data = this.loadCollectionCache(file);
+            this.setState({ collection: data, view: View.docs });
+        } catch {
+            this.setState({ collection: undefined, view: View.load });
         }
     }
 

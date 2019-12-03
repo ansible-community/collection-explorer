@@ -1,3 +1,17 @@
 .main {
     display: flex;
+
+    .collection-header {
+        padding: 8px;
+        display: flex;
+        justify-content: space-between;
+
+        .reload-icon {
+            cursor: pointer;
+        }
+    }
+
+    .docs-col {
+        flex-grow: 1;
+    }
 }

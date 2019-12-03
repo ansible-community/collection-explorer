@@ -77,9 +77,9 @@ export class CollectionDocs extends React.Component<IProps, IState> {
         }
 
         // scroll to top of page
-        if (this.docsRef.current) {
-            this.docsRef.current.scrollIntoView();
-        }
+        // if (this.docsRef.current) {
+        //     this.docsRef.current.scrollIntoView();
+        // }
 
         return (
             <React.Fragment>
