@@ -147,17 +147,27 @@ export class CollectionLoader extends React.Component<{}, IState> {
                 rootDir = rootDir.slice(0, -9);
             }
 
-            const exe = rootDir + '/python/dist/importer_wrapper/importer_wrapper';
-            const path =
-                rootDir +
-                '/python/dist/ansible-doc' +
-                ':' +
-                rootDir +
-                '/python/dist/ansible-lint' +
-                ':' +
-                process.env.PATH;
+            let exe;
+            let path;
+            const args = [];
 
-            const p = spawn(exe, [this.state.selectedCollection.path], {
+            if (process.env.NODE_ENV == 'production') {
+                exe = rootDir + '/python/dist/importer_wrapper/importer_wrapper';
+                path =
+                    rootDir +
+                    '/python/dist/ansible-doc' +
+                    ':' +
+                    rootDir +
+                    '/python/dist/ansible-lint' +
+                    ':' +
+                    process.env.PATH;
+            } else {
+                exe = 'python';
+                path = process.env.PATH;
+                args.push('python/importer_wrapper.py');
+            }
+
+            const p = spawn(exe, args.concat([this.state.selectedCollection.path]), {
                 env: {
                     PATH: path
                 }
