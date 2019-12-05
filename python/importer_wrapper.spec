@@ -2,6 +2,8 @@
 
 block_cipher = None
 
+# creates a hook that loads packages for pkg_resources
+# https://github.com/pyinstaller/pyinstaller/issues/3050
 
 import pkg_resources
 import os

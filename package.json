@@ -17,7 +17,9 @@
         "pretest:e2e": "npm run build",
         "test:e2e": "jest '(\\/test\\/e2e/).*'",
         "pack": "npm run build && electron-builder --dir",
-        "dist": "npm run build && electron-builder"
+        "dist": "npm run build && electron-builder --mac",
+        "electron-builder-deps": "electron-builder install-app-deps",
+        "compile-all": "cd python/ && bash build_importer.sh && npm run dist"
     },
     "jest": {
         "transform": {
@@ -37,7 +39,7 @@
         }
     },
     "build": {
-        "productName": "ProductName",
+        "productName": "Collection Explorer",
         "appId": "org.your.productname",
         "mac": {
             "category": "your.app.category.type"
@@ -45,9 +47,17 @@
         "directories": {
             "output": "release"
         },
+        "extraFiles": [
+            {
+                "from": "python/dist/",
+                "to": "Resources/python/dist",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ],
         "files": [
             "dist/",
-            "node_modules/",
             "package.json"
         ],
         "linux": {
@@ -93,6 +103,7 @@
         "electron": "^3.1.13",
         "electron-builder": "^20.44.4",
         "electron-devtools-installer": "^2.2.4",
+        "fibers": "^4.0.2",
         "file-loader": "^3.0.1",
         "fork-ts-checker-webpack-plugin": "^1.6.0",
         "html-webpack-plugin": "^3.2.0",
@@ -104,6 +115,7 @@
         "react-hot-loader": "^4.12.18",
         "react-test-renderer": "^16.12.0",
         "redux-devtools-extension": "^2.13.5",
+        "sass": "^1.23.7",
         "sass-loader": "^7.3.1",
         "source-map-loader": "^0.2.4",
         "spectron": "^5.0.0",
@@ -117,12 +129,14 @@
         "webpack": "^4.41.2",
         "webpack-cli": "^3.3.10",
         "webpack-dev-server": "^3.9.0",
+        "canvas": "^2.6.0",
         "webpack-merge": "^4.2.2"
     },
     "dependencies": {
         "@patternfly/patternfly": "^2.43.0",
         "@patternfly/react-core": "^3.120.8",
         "ansible-doc-renderer": "github:newswangerd/ansible-doc-renderer",
+        "app-root-dir": "^1.0.2",
         "react": "^16.12.0",
         "react-dom": "^16.12.0",
         "react-redux": "^7.1.3",

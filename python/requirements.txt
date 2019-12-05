@@ -1,1 +1,2 @@
 git+https://github.com/ansible/galaxy-importer.git#egg=galaxy-importer
+pyinstaller

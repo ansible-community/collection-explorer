@@ -17,7 +17,7 @@ export class CollectionList extends React.Component<IProps, {}> {
     render() {
         return (
             <div className="pf-c-content collection-list">
-                Colletions
+                Collections
                 <ul>
                     {this.props.collectionList.map((v, i) => (
                         <li style={{ cursor: 'pointer' }} key={i}>

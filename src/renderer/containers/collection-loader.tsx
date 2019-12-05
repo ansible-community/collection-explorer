@@ -4,6 +4,8 @@ import { spawn } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import * as process from 'process';
+import * as appRootDir from 'app-root-dir';
 
 import { Button, Tooltip } from '@patternfly/react-core';
 import { RedoIcon } from '@patternfly/react-icons';
@@ -140,17 +142,32 @@ export class CollectionLoader extends React.Component<{}, IState> {
 
     private importCollection() {
         this.setState({ view: View.loading }, () => {
-            const p = spawn('python', [
-                'python/importer_wrapper.py',
-                this.state.selectedCollection.path
-            ]);
+            let rootDir = appRootDir.get();
+            if (rootDir.endsWith('/app.asar')) {
+                rootDir = rootDir.slice(0, -9);
+            }
 
+            const exe = rootDir + '/python/dist/importer_wrapper/importer_wrapper';
+            const path =
+                rootDir +
+                '/python/dist/ansible-doc' +
+                ':' +
+                rootDir +
+                '/python/dist/ansible-lint' +
+                ':' +
+                process.env.PATH;
+
+            const p = spawn(exe, [this.state.selectedCollection.path], {
+                env: {
+                    PATH: path
+                }
+            });
             const consoleOut = [];
             p.stdout.on('data', data => {
                 consoleOut.push(data);
             });
             p.stderr.on('data', data => {
-                // console.error(`stderr: ${data}`);
+                console.error(`stderr: ${data}`);
             });
             p.on('exit', code => {
                 // this.setState({ collection: JSON.parse(allData.join()) });
