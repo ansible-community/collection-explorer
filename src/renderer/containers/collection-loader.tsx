@@ -5,12 +5,17 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as process from 'process';
-import * as appRootDir from 'app-root-dir';
 
+import { getBasePath, CollectionPathFinder } from '../../lib';
 import { Button, Tooltip } from '@patternfly/react-core';
 import { RedoIcon } from '@patternfly/react-icons';
 
-import { CollectionDocs, CollectionList, CollectionFileType } from '../components';
+import {
+    CollectionDocs,
+    CollectionList,
+    CollectionFileType,
+    DirectoryListType
+} from '../components';
 
 enum View {
     docs = 'docs',
@@ -21,7 +26,7 @@ enum View {
 
 interface IState {
     collection: any;
-    collectionList: CollectionFileType[];
+    directories: DirectoryListType[];
     selectedCollection: CollectionFileType;
     selectedName: string;
     selectedType: string;
@@ -37,7 +42,7 @@ export class CollectionLoader extends React.Component<{}, IState> {
 
         this.state = {
             collection: undefined,
-            collectionList: [],
+            directories: [],
             selectedCollection: undefined,
             selectedName: '',
             selectedType: 'docs',
@@ -52,12 +57,12 @@ export class CollectionLoader extends React.Component<{}, IState> {
     }
 
     render() {
-        const { collection, collectionList, selectedCollection } = this.state;
+        const { collection, directories, selectedCollection } = this.state;
         return (
             <div className="main">
                 <div>
                     <CollectionList
-                        collectionList={collectionList}
+                        directories={directories}
                         selectedCollection={selectedCollection}
                         selectCollection={collection =>
                             this.setState({ selectedCollection: collection }, () =>
@@ -72,7 +77,7 @@ export class CollectionLoader extends React.Component<{}, IState> {
     }
 
     private renderDocColumn() {
-        const { collection, collectionList, selectedCollection } = this.state;
+        const { selectedCollection } = this.state;
 
         switch (this.state.view) {
             case View.docs:
@@ -114,14 +119,30 @@ export class CollectionLoader extends React.Component<{}, IState> {
     }
 
     private loadCollectionList() {
-        const c_path = os.homedir() + '/.ansible/collections/ansible_collections/';
+        const directories = [];
+        const collection_paths = CollectionPathFinder.getPaths();
 
+        for (const p of collection_paths) {
+            directories.push({
+                path: p,
+                collections: this.loadDir(p)
+            });
+        }
+
+        this.setState({ directories: directories });
+    }
+
+    private loadDir(c_path) {
         const collections = [];
-
         for (const ns of fs.readdirSync(c_path)) {
             if (fs.statSync(path.join(c_path, ns)).isDirectory()) {
                 for (const collection of fs.readdirSync(path.join(c_path, ns))) {
-                    if (this.isCollection(fs.readdirSync(path.join(c_path, ns, collection)))) {
+                    const collectionDir = path.join(c_path, ns, collection);
+
+                    if (
+                        fs.statSync(collectionDir).isDirectory() &&
+                        this.isCollection(fs.readdirSync(collectionDir))
+                    ) {
                         collections.push({
                             name: collection,
                             namespace: ns,
@@ -132,7 +153,7 @@ export class CollectionLoader extends React.Component<{}, IState> {
             }
         }
 
-        this.setState({ collectionList: collections });
+        return collections;
     }
 
     private loadCollectionCache(file) {
@@ -142,16 +163,13 @@ export class CollectionLoader extends React.Component<{}, IState> {
 
     private importCollection() {
         this.setState({ view: View.loading }, () => {
-            let rootDir = appRootDir.get();
-            if (rootDir.endsWith('/app.asar')) {
-                rootDir = rootDir.slice(0, -9);
-            }
-
+            const rootDir = getBasePath();
             let exe;
             let path;
             const args = [];
 
-            if (process.env.NODE_ENV == 'production') {
+            // if running in production mode, use the bundled python scripts
+            if (process.env.NODE_ENV === 'production') {
                 exe = rootDir + '/python/dist/importer_wrapper/importer_wrapper';
                 path =
                     rootDir +
