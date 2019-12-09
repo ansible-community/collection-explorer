@@ -20,23 +20,20 @@ import { getBasePath } from './base-path';
 export class CollectionPathFinder {
     static getPaths(): string[] {
         const varConfig = this.parsevarConfig();
-        console.log(process.env[varConfig.env.name]);
-        console.log(varConfig.env.name);
-        console.log(varConfig);
-
         const envVar = varConfig.env[0].name;
 
-        console.log(envVar);
-
+        // Check environment variables for colection paths
         if (process.env[envVar]) {
             return this.parsePaths(process.env[envVar]);
         }
-        const configPaths = this.getAnsibleConfigPaths(varConfig);
 
+        // Find and check ansible.cfg for colection paths
+        const configPaths = this.getAnsibleConfigPaths(varConfig);
         if (configPaths) {
             return this.parsePaths(configPaths);
         }
 
+        // Return default collection paths
         return this.parsePaths(varConfig.default);
     }
 
