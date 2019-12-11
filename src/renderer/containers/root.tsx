@@ -5,7 +5,7 @@ import { CollectionLoader } from '../../lib';
 import { Button, Tooltip } from '@patternfly/react-core';
 import { RedoIcon } from '@patternfly/react-icons';
 
-import { CollectionDocs, CollectionList } from '../components';
+import { Tab, CollectionList } from '../components';
 
 import { ViewType, TabType, DirectoriesType, CollectionsType } from '../../types';
 
@@ -58,7 +58,7 @@ export class Root extends React.Component<{}, IState> {
     }
 
     render() {
-        const { directories, collections } = this.state;
+        const { directories, collections, tabs, contentSelected } = this.state;
         console.log(this.state);
         return (
             <div className="main">
@@ -79,62 +79,16 @@ export class Root extends React.Component<{}, IState> {
                         }
                     />
                 </div>
-                <div className="docs-col">{this.renderDocColumn()}</div>
+                <div className="docs-col">
+                    <Tab
+                        tabs={tabs}
+                        contentSelected={contentSelected}
+                        collections={collections}
+                        importCollection={collectionID => this.importCollection(collectionID)}
+                    />
+                </div>
             </div>
         );
-    }
-
-    private renderDocColumn() {
-        const { contentSelected, tabs } = this.state;
-
-        if (tabs.length === 0 || contentSelected.tab >= tabs.length) {
-            return null;
-        }
-
-        const currentTab = tabs[contentSelected.tab];
-        let collection;
-        switch (currentTab.view) {
-            case ViewType.docs:
-                collection = this.state.collections.byID[currentTab.data.collectionID];
-                return (
-                    <div>
-                        <div className="collection-header">
-                            <div className="pf-c-content">
-                                <h1>
-                                    {collection.namespace}.{collection.name}
-                                </h1>
-                            </div>
-                            <div>
-                                <Tooltip content="Reload Collection" entryDelay={0}>
-                                    <RedoIcon
-                                        className="reload-icon"
-                                        onClick={() =>
-                                            this.importCollection(currentTab.data.collectionID)
-                                        }
-                                    />
-                                </Tooltip>
-                            </div>
-                        </div>
-                        <div>
-                            <CollectionDocs collection={collection.importedData} />
-                        </div>
-                    </div>
-                );
-            case ViewType.load:
-                collection = this.state.collections.byID[currentTab.data.collectionID];
-
-                return (
-                    <div>
-                        <Button onClick={() => this.importCollection(currentTab.data.collectionID)}>
-                            Load {collection.namespace}.{collection.name}
-                        </Button>
-                    </div>
-                );
-            case ViewType.loading:
-                return <div>Loading collection</div>;
-            case ViewType.error:
-                return <div>Error loading colleciton</div>;
-        }
     }
 
     private loadCollectionList() {
