@@ -2,23 +2,28 @@ import { spawn } from 'child_process';
 import * as FS from 'fs';
 import * as Path from 'path';
 
-import { DirectoryListType } from '../renderer/components';
-import { CollectionPathFinder, getBasePath } from '../lib';
+import { Directories, Collections } from '../types';
+import { CollectionPathFinder, getBasePath, StateHelper } from '../lib';
 
 export class CollectionLoader {
     // Returns a list of directories with their respective collections
-    static getCollectionList(): DirectoryListType[] {
-        const directories: DirectoryListType[] = [];
+    static getCollectionList(): { collections: Collections; directories: Directories } {
+        const directories: Directories = { byID: {} };
+        const collections: Collections = { byID: {} };
         const collection_paths = CollectionPathFinder.getPaths();
 
         for (const p of collection_paths) {
-            directories.push({
+            const col = this.loadDir(p);
+
+            directories.byID[StateHelper.getID(p)] = {
                 path: p,
-                collections: this.loadDir(p)
-            });
+                collectionIDs: Object.keys(col.byID)
+            };
+
+            collections.byID = { ...collections.byID, ...col.byID };
         }
 
-        return directories;
+        return { collections: collections, directories: directories };
     }
 
     static getCollection(path) {
@@ -81,9 +86,9 @@ export class CollectionLoader {
         });
     }
 
-    private static loadDir(c_path) {
+    private static loadDir(c_path): Collections {
         // Returns a list of collection in a given directory
-        const collections = [];
+        const collections: Collections = { byID: {} };
         for (const ns of FS.readdirSync(c_path)) {
             if (FS.statSync(Path.join(c_path, ns)).isDirectory()) {
                 for (const collection of FS.readdirSync(Path.join(c_path, ns))) {
@@ -93,11 +98,13 @@ export class CollectionLoader {
                         FS.statSync(collectionDir).isDirectory() &&
                         this.isCollection(FS.readdirSync(collectionDir))
                     ) {
-                        collections.push({
+                        const col_path = Path.join(c_path, ns, collection);
+                        const id = StateHelper.getID(col_path);
+                        collections.byID[id] = {
                             name: collection,
                             namespace: ns,
-                            path: Path.join(c_path, ns, collection)
-                        });
+                            path: col_path
+                        };
                     }
                 }
             }

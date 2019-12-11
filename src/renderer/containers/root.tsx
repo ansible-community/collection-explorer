@@ -5,27 +5,36 @@ import { CollectionLoader } from '../../lib';
 import { Button, Tooltip } from '@patternfly/react-core';
 import { RedoIcon } from '@patternfly/react-icons';
 
-import {
-    CollectionDocs,
-    CollectionList,
-    CollectionFileType,
-    DirectoryListType
-} from '../components';
+import { CollectionDocs, CollectionList } from '../components';
 
-enum View {
-    docs = 'docs',
-    load = 'load',
-    loading = 'loading',
-    error = 'error'
-}
+import {
+    View,
+    ImportView,
+    PluginView,
+    HTMLView,
+    ErrorView,
+    Directories,
+    Collections
+} from '../../types';
 
 interface IState {
-    collection: any;
-    directories: DirectoryListType[];
-    selectedCollection: CollectionFileType;
-    selectedName: string;
-    selectedType: string;
-    view: View;
+    directories: Directories;
+    collections: Collections;
+    contentSelected: {
+        tab: number;
+    };
+
+    sidebarSelected: {
+        directoryID: string;
+        collectionID: string;
+        contentType: string;
+        contentName: string;
+    };
+
+    tabs: {
+        view: string;
+        data: ImportView | PluginView | HTMLView | ErrorView;
+    }[];
 }
 
 // renders markdown files in collection docs/ directory
@@ -36,12 +45,20 @@ export class Root extends React.Component<{}, IState> {
         super(props);
 
         this.state = {
-            collection: undefined,
-            directories: [],
-            selectedCollection: undefined,
-            selectedName: '',
-            selectedType: 'docs',
-            view: null
+            directories: { byID: {} },
+            collections: { byID: {} },
+
+            sidebarSelected: {
+                directoryID: null,
+                collectionID: null,
+                contentType: null,
+                contentName: null
+            },
+
+            contentSelected: {
+                tab: 0
+            },
+            tabs: [{ view: null, data: null }]
         };
 
         this.docsRef = React.createRef();
@@ -52,16 +69,23 @@ export class Root extends React.Component<{}, IState> {
     }
 
     render() {
-        const { directories, selectedCollection } = this.state;
+        const { directories, collections } = this.state;
+        console.log(this.state);
         return (
             <div className="main">
                 <div>
                     <CollectionList
                         directories={directories}
-                        selectedCollection={selectedCollection}
+                        collections={collections}
                         selectCollection={collection =>
-                            this.setState({ selectedCollection: collection }, () =>
-                                this.loadCollectionDetail()
+                            this.setState(
+                                {
+                                    sidebarSelected: {
+                                        ...this.state.sidebarSelected,
+                                        collectionID: collection
+                                    }
+                                },
+                                () => this.loadCollectionDetail(collection)
                             )
                         }
                     />
@@ -72,37 +96,48 @@ export class Root extends React.Component<{}, IState> {
     }
 
     private renderDocColumn() {
-        const { selectedCollection } = this.state;
+        const { contentSelected, tabs } = this.state;
 
-        switch (this.state.view) {
+        if (tabs.length === 0 || contentSelected.tab >= tabs.length) {
+            return null;
+        }
+
+        const currentTab = tabs[contentSelected.tab];
+        let collection;
+        switch (currentTab.view) {
             case View.docs:
+                collection = this.state.collections.byID[currentTab.data.collectionID];
                 return (
                     <div>
                         <div className="collection-header">
                             <div className="pf-c-content">
                                 <h1>
-                                    {selectedCollection.namespace}.{selectedCollection.name}
+                                    {collection.namespace}.{collection.name}
                                 </h1>
                             </div>
                             <div>
                                 <Tooltip content="Reload Collection" entryDelay={0}>
                                     <RedoIcon
                                         className="reload-icon"
-                                        onClick={() => this.importCollection()}
+                                        onClick={() =>
+                                            this.importCollection(currentTab.data.collectionID)
+                                        }
                                     />
                                 </Tooltip>
                             </div>
                         </div>
                         <div>
-                            <CollectionDocs collection={this.state.collection} />
+                            <CollectionDocs collection={collection.importedData} />
                         </div>
                     </div>
                 );
             case View.load:
+                collection = this.state.collections.byID[currentTab.data.collectionID];
+
                 return (
                     <div>
-                        <Button onClick={() => this.importCollection()}>
-                            Load {selectedCollection.namespace}.{selectedCollection.name}
+                        <Button onClick={() => this.importCollection(currentTab.data.collectionID)}>
+                            Load {collection.namespace}.{collection.name}
                         </Button>
                     </div>
                 );
@@ -114,28 +149,52 @@ export class Root extends React.Component<{}, IState> {
     }
 
     private loadCollectionList() {
-        this.setState({ directories: CollectionLoader.getCollectionList() });
+        const data = CollectionLoader.getCollectionList();
+        this.setState({ directories: data.directories, collections: data.collections });
     }
-    private importCollection() {
-        this.setState({ view: View.loading }, () => {
-            CollectionLoader.importCollection(this.state.selectedCollection.path, {
+    private importCollection(collectionID: string) {
+        const tabs = [...this.state.tabs];
+        const currentTab = this.state.contentSelected.tab;
+        tabs[currentTab] = {
+            view: View.loading,
+            data: { collectionID: collectionID }
+        };
+        this.setState({ tabs: tabs }, () => {
+            CollectionLoader.importCollection(this.state.collections.byID[collectionID].path, {
                 onStandardErr: error => console.error(`stderr: ${error.toString()}`)
             })
                 .then(() => {
-                    this.loadCollectionDetail();
+                    this.loadCollectionDetail(collectionID);
                 })
                 .catch(() => {
-                    this.setState({ view: View.error });
+                    const newTabs = { ...tabs };
+                    newTabs[currentTab] = {
+                        view: View.error,
+                        data: { collectionID: collectionID }
+                    };
+                    this.setState({ tabs: tabs });
                 });
         });
     }
 
-    private loadCollectionDetail() {
+    private loadCollectionDetail(collectionID) {
+        const tabID = this.state.contentSelected.tab;
         try {
-            const data = CollectionLoader.getCollection(this.state.selectedCollection.path);
-            this.setState({ collection: data, view: View.docs });
+            const data = CollectionLoader.getCollection(
+                this.state.collections.byID[collectionID].path
+            );
+
+            const newCollections = { ...this.state.collections };
+            const newTabs = [...this.state.tabs];
+            newTabs[tabID] = { view: View.docs, data: { collectionID: collectionID } };
+            newCollections.byID[collectionID].importedData = data;
+
+            this.setState({ collections: newCollections, tabs: newTabs });
         } catch {
-            this.setState({ collection: undefined, view: View.load });
+            const newTabs = [...this.state.tabs];
+            newTabs[tabID] = { view: View.load, data: { collectionID: collectionID } };
+
+            this.setState({ tabs: newTabs });
         }
     }
 }

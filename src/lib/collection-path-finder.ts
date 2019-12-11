@@ -1,13 +1,3 @@
-// look up ansible.cfg and get list of collection dirs
-// - ANSIBLE_CONFIG env variable
-// - ~/.ansible.cfg
-// - /etc/ansible/ansible.cfg
-//
-// look up ANSIBLE_COLLECTION_PATHS
-// look up varConfig
-// - ~/.ansible/collections
-// - /usr/share/ansible/collections
-
 import * as fs from 'fs';
 import * as os from 'os';
 import * as Path from 'path';

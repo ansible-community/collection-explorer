@@ -1,41 +1,34 @@
 import * as React from 'react';
 import './collection-list.scss';
 
-export class CollectionFileType {
-    name: string;
-    namespace: string;
-    path: string;
-}
-
-export class DirectoryListType {
-    path: string;
-    collections: CollectionFileType[];
-}
+import { Directories, Collections } from '../../../types';
 
 interface IProps {
-    directories: DirectoryListType[];
-    selectedCollection: CollectionFileType;
-    selectCollection: (collection: CollectionFileType) => void;
+    directories: Directories;
+    collections: Collections;
+    selectCollection: (collectionID: string) => void;
 }
 
 export class CollectionList extends React.Component<IProps, {}> {
     render() {
+        const { directories, collections } = this.props;
         return (
             <div className="pf-c-content collection-list">
                 Collections
                 <ul>
-                    {this.props.directories.map((v, i) => (
+                    {Object.keys(directories.byID).map((v, i) => (
                         <li key={i}>
-                            {v.path}
+                            {directories.byID[v].path}
                             <ul>
-                                {v.collections.map((x, j) => (
+                                {directories.byID[v].collectionIDs.map((x, j) => (
                                     <li style={{ cursor: 'pointer' }} key={j}>
                                         <a onClick={() => this.props.selectCollection(x)}>
-                                            {x.namespace}.{x.name}
+                                            {collections.byID[x].namespace}.
+                                            {collections.byID[x].name}
                                         </a>
                                     </li>
                                 ))}
-                                {v.collections.length === 0 && (
+                                {directories.byID[v].collectionIDs.length === 0 && (
                                     <li>
                                         <i>No collections found</i>
                                     </li>
