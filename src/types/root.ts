@@ -1,32 +1,32 @@
-export enum View {
+export enum ViewType {
     docs = 'docs',
     load = 'load',
     loading = 'loading',
     error = 'error'
 }
 
-export class ErrorView {
+export class ErrorViewType {
     collectionID: string;
 }
 
-export class ImportView {
+export class ImportViewType {
     // errorMessage: string;
     // importMessages: string;
     // status: string;
     collectionID: string;
 }
 
-export class PluginView {
+export class PluginViewType {
     // plugin: any;
     collectionID: string;
 }
 
-export class HTMLView {
+export class HTMLViewType {
     html: string;
     collectionID: string;
 }
 
-export class Directories {
+export class DirectoriesType {
     byID: {
         [key: string]: {
             path: string;
@@ -35,7 +35,7 @@ export class Directories {
     };
 }
 
-export class Collections {
+export class CollectionsType {
     byID: {
         [key: string]: {
             name: string;
@@ -54,4 +54,9 @@ export class Collections {
             // docs_blob?: {};
         };
     };
+}
+
+export class TabType {
+    view: string;
+    data: ImportViewType | PluginViewType | HTMLViewType | ErrorViewType;
 }

@@ -1,11 +1,11 @@
 import * as React from 'react';
 import './collection-list.scss';
 
-import { Directories, Collections } from '../../../types';
+import { DirectoriesType, CollectionsType } from '../../../types';
 
 interface IProps {
-    directories: Directories;
-    collections: Collections;
+    directories: DirectoriesType;
+    collections: CollectionsType;
     selectCollection: (collectionID: string) => void;
 }
 

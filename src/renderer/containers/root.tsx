@@ -7,19 +7,11 @@ import { RedoIcon } from '@patternfly/react-icons';
 
 import { CollectionDocs, CollectionList } from '../components';
 
-import {
-    View,
-    ImportView,
-    PluginView,
-    HTMLView,
-    ErrorView,
-    Directories,
-    Collections
-} from '../../types';
+import { ViewType, TabType, DirectoriesType, CollectionsType } from '../../types';
 
 interface IState {
-    directories: Directories;
-    collections: Collections;
+    directories: DirectoriesType;
+    collections: CollectionsType;
     contentSelected: {
         tab: number;
     };
@@ -31,10 +23,7 @@ interface IState {
         contentName: string;
     };
 
-    tabs: {
-        view: string;
-        data: ImportView | PluginView | HTMLView | ErrorView;
-    }[];
+    tabs: TabType[];
 }
 
 // renders markdown files in collection docs/ directory
@@ -105,7 +94,7 @@ export class Root extends React.Component<{}, IState> {
         const currentTab = tabs[contentSelected.tab];
         let collection;
         switch (currentTab.view) {
-            case View.docs:
+            case ViewType.docs:
                 collection = this.state.collections.byID[currentTab.data.collectionID];
                 return (
                     <div>
@@ -131,7 +120,7 @@ export class Root extends React.Component<{}, IState> {
                         </div>
                     </div>
                 );
-            case View.load:
+            case ViewType.load:
                 collection = this.state.collections.byID[currentTab.data.collectionID];
 
                 return (
@@ -141,9 +130,9 @@ export class Root extends React.Component<{}, IState> {
                         </Button>
                     </div>
                 );
-            case View.loading:
+            case ViewType.loading:
                 return <div>Loading collection</div>;
-            case View.error:
+            case ViewType.error:
                 return <div>Error loading colleciton</div>;
         }
     }
@@ -156,7 +145,7 @@ export class Root extends React.Component<{}, IState> {
         const tabs = [...this.state.tabs];
         const currentTab = this.state.contentSelected.tab;
         tabs[currentTab] = {
-            view: View.loading,
+            view: ViewType.loading,
             data: { collectionID: collectionID }
         };
         this.setState({ tabs: tabs }, () => {
@@ -169,7 +158,7 @@ export class Root extends React.Component<{}, IState> {
                 .catch(() => {
                     const newTabs = { ...tabs };
                     newTabs[currentTab] = {
-                        view: View.error,
+                        view: ViewType.error,
                         data: { collectionID: collectionID }
                     };
                     this.setState({ tabs: tabs });
@@ -186,13 +175,13 @@ export class Root extends React.Component<{}, IState> {
 
             const newCollections = { ...this.state.collections };
             const newTabs = [...this.state.tabs];
-            newTabs[tabID] = { view: View.docs, data: { collectionID: collectionID } };
+            newTabs[tabID] = { view: ViewType.docs, data: { collectionID: collectionID } };
             newCollections.byID[collectionID].importedData = data;
 
             this.setState({ collections: newCollections, tabs: newTabs });
         } catch {
             const newTabs = [...this.state.tabs];
-            newTabs[tabID] = { view: View.load, data: { collectionID: collectionID } };
+            newTabs[tabID] = { view: ViewType.load, data: { collectionID: collectionID } };
 
             this.setState({ tabs: newTabs });
         }
