@@ -1,5 +1,6 @@
 export enum ViewType {
-    docs = 'docs',
+    plugin = 'plugin',
+    html = 'html',
     load = 'load',
     loading = 'loading',
     error = 'error'
@@ -17,7 +18,7 @@ export class ImportViewType {
 }
 
 export class PluginViewType {
-    // plugin: any;
+    plugin: any;
     collectionID: string;
 }
 
@@ -35,6 +36,26 @@ export class DirectoriesType {
     };
 }
 
+export class DocsEntryType {
+    display: string;
+    name: string;
+    type: string;
+}
+
+export class DocsIndexType {
+    documentation: DocsEntryType[];
+    modules: DocsEntryType[];
+    roles: DocsEntryType[];
+    playbooks: DocsEntryType[];
+    plugins: DocsEntryType[];
+}
+
+export class ImporterResultType {
+    metadata: any;
+    docs_blob: any;
+    contents: any;
+}
+
 export class CollectionsType {
     byID: {
         [key: string]: {
@@ -42,15 +63,13 @@ export class CollectionsType {
             namespace: string;
             path: string;
 
-            importedData?: any;
+            index?: DocsIndexType;
 
             // collections may or may not be loaded
-            // metadata?: {};
-
-            // should contents be a fk?
-            // contents?: {};
+            metadata?: {};
 
             // no docs_blob in memory? That could be really inefficient
+            // maybe just store plugin data in tab data
             // docs_blob?: {};
         };
     };

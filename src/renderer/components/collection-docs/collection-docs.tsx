@@ -7,129 +7,74 @@ import {
     EmptyStateBody,
     EmptyStateVariant,
     Title,
-    EmptyStateIcon
+    EmptyStateIcon,
+    Tooltip
 } from '@patternfly/react-core';
 
 import { WarningTriangleIcon } from '@patternfly/react-icons';
-
 import { RenderPluginDoc, DocsNav } from 'ansible-doc-renderer';
+import { RedoIcon } from '@patternfly/react-icons';
 
-interface IState {
-    selectedName: string;
-    selectedType: string;
-}
+import { CollectionsType, HTMLViewType, PluginViewType, ViewType } from '../../../types';
 
 interface IProps {
-    collection: any;
+    data: HTMLViewType | PluginViewType;
+    view: ViewType.plugin | ViewType.html;
+    importCollection: (collectionID) => void;
+    collections: CollectionsType;
 }
 
 // renders markdown files in collection docs/ directory
-export class CollectionDocs extends React.Component<IProps, IState> {
+export class CollectionDocs extends React.Component<IProps> {
     docsRef: any;
 
     constructor(props) {
         super(props);
-
-        this.state = {
-            selectedName: '',
-            selectedType: 'docs'
-        };
-
         this.docsRef = React.createRef();
     }
 
     render() {
-        const { selectedType, selectedName } = this.state;
-        const { collection } = this.props;
-
-        let displayHTML: string;
-        let pluginData;
-
-        if (selectedType === 'docs' && selectedName && selectedName !== 'readme') {
-            if (collection.docs_blob.documentation_files) {
-                const file = collection.docs_blob.documentation_files.find(
-                    x => x.name === selectedName
-                );
-
-                if (file) {
-                    displayHTML = file.html;
-                }
-            }
-        } else if (selectedType !== 'docs' && selectedName) {
-            // check if contents exists
-            if (collection.docs_blob.contents) {
-                const content = collection.docs_blob.contents.find(
-                    x => x.content_type === selectedType && x.content_name === selectedName
-                );
-
-                if (content) {
-                    if (selectedType === 'role') {
-                        displayHTML = content['readme_html'];
-                    } else {
-                        pluginData = content;
-                    }
-                }
-            }
-        } else {
-            if (collection.docs_blob.collection_readme) {
-                displayHTML = collection.docs_blob.collection_readme.html;
-            }
-        }
-
-        // scroll to top of page
-        // if (this.docsRef.current) {
-        //     this.docsRef.current.scrollIntoView();
-        // }
+        const { data, importCollection, collections, view } = this.props;
+        const collection = collections.byID[data.collectionID];
+        console.log(collection);
 
         return (
             <React.Fragment>
+                <div className="collection-header">
+                    <div className="pf-c-content">
+                        <h1>
+                            {collection.namespace}.{collection.name}
+                        </h1>
+                    </div>
+                    <div>
+                        <Tooltip content="Reload Collection" entryDelay={0}>
+                            <RedoIcon
+                                className="reload-icon"
+                                onClick={() => importCollection(data.collectionID)}
+                            />
+                        </Tooltip>
+                    </div>
+                </div>
                 <div className="docs-container">
-                    <DocsNav
-                        className="sidebar"
-                        namespace={collection.metadata.namespace}
-                        collection={collection.metadata.name}
-                        docs_blob={collection.docs_blob}
-                        renderLink={entry => (
-                            <a
-                                onClick={() => {
-                                    this.setState({
-                                        selectedName: entry.name,
-                                        selectedType: entry.type
-                                    });
-                                }}
-                            >
-                                {entry.display}
-                            </a>
-                        )}
-                        selectedName={selectedName}
-                        selectedType={selectedType}
-                    />
                     <div className="body docs" ref={this.docsRef}>
-                        {displayHTML || pluginData ? (
-                            // if neither variable is set, render not found
-                            displayHTML ? (
-                                // if displayHTML is set, render it
-                                <div
-                                    className="pf-c-content"
-                                    dangerouslySetInnerHTML={{
-                                        __html: displayHTML
-                                    }}
-                                />
-                            ) : (
-                                // if plugin data is set render it
-                                <RenderPluginDoc
-                                    renderModuleLink={s => <span>{s}</span>}
-                                    renderDocLink={(s, s1) => <span>{s}</span>}
-                                    renderTableOfContentsLink={(title, section) => (
-                                        <Scrollchor key={section} to={'#' + section}>
-                                            {title}
-                                        </Scrollchor>
-                                    )}
-                                    plugin={pluginData}
-                                />
-                            )
+                        {view === ViewType.html ? (
+                            <div
+                                className="pf-c-content"
+                                dangerouslySetInnerHTML={{
+                                    __html: (data as HTMLViewType).html
+                                }}
+                            />
                         ) : (
-                            this.renderNotFound(collection.metadata.name)
+                            <RenderPluginDoc
+                                renderModuleLink={s => <span>{s}</span>}
+                                renderDocLink={(s, s1) => <span>{s}</span>}
+                                renderTableOfContentsLink={(title, section) => (
+                                    <Scrollchor key={section} to={'#' + section}>
+                                        {title}
+                                    </Scrollchor>
+                                )}
+                                plugin={(data as PluginViewType).plugin}
+                            />
                         )}
                     </div>
                 </div>

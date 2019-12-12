@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Button, Tooltip } from '@patternfly/react-core';
 import { RedoIcon } from '@patternfly/react-icons';
 
-import { TabType, CollectionsType, ViewType } from '../../../types';
+import { TabType, CollectionsType, ViewType, PluginViewType, HTMLViewType } from '../../../types';
 import { CollectionDocs } from '../../components';
 
 interface IProps {
@@ -23,32 +23,36 @@ export class Tab extends React.Component<IProps, {}> {
         const currentTab = tabs[contentSelected.tab];
         let collection;
         switch (currentTab.view) {
-            case ViewType.docs:
+            case ViewType.plugin:
                 collection = collections.byID[currentTab.data.collectionID];
                 return (
                     <div>
-                        <div className="collection-header">
-                            <div className="pf-c-content">
-                                <h1>
-                                    {collection.namespace}.{collection.name}
-                                </h1>
-                            </div>
-                            <div>
-                                <Tooltip content="Reload Collection" entryDelay={0}>
-                                    <RedoIcon
-                                        className="reload-icon"
-                                        onClick={() =>
-                                            importCollection(currentTab.data.collectionID)
-                                        }
-                                    />
-                                </Tooltip>
-                            </div>
-                        </div>
                         <div>
-                            <CollectionDocs collection={collection.importedData} />
+                            <CollectionDocs
+                                data={currentTab.data as PluginViewType}
+                                view={currentTab.view}
+                                importCollection={collectionID => importCollection(collectionID)}
+                                collections={collections}
+                            />
                         </div>
                     </div>
                 );
+
+            case ViewType.html:
+                collection = collections.byID[currentTab.data.collectionID];
+                return (
+                    <div>
+                        <div>
+                            <CollectionDocs
+                                data={currentTab.data as HTMLViewType}
+                                view={currentTab.view}
+                                importCollection={collectionID => importCollection(collectionID)}
+                                collections={collections}
+                            />
+                        </div>
+                    </div>
+                );
+
             case ViewType.load:
                 collection = collections.byID[currentTab.data.collectionID];
 

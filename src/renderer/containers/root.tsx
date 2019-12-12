@@ -16,11 +16,8 @@ interface IState {
         tab: number;
     };
 
-    sidebarSelected: {
-        directoryID: string;
-        collectionID: string;
-        contentType: string;
-        contentName: string;
+    sidebarState: {
+        expandedIDs: string[];
     };
 
     tabs: TabType[];
@@ -37,11 +34,8 @@ export class Root extends React.Component<{}, IState> {
             directories: { byID: {} },
             collections: { byID: {} },
 
-            sidebarSelected: {
-                directoryID: null,
-                collectionID: null,
-                contentType: null,
-                contentName: null
+            sidebarState: {
+                expandedIDs: []
             },
 
             contentSelected: {
@@ -58,7 +52,7 @@ export class Root extends React.Component<{}, IState> {
     }
 
     render() {
-        const { directories, collections, tabs, contentSelected } = this.state;
+        const { directories, collections, tabs, contentSelected, sidebarState } = this.state;
         console.log(this.state);
         return (
             <div className="main">
@@ -66,17 +60,12 @@ export class Root extends React.Component<{}, IState> {
                     <CollectionList
                         directories={directories}
                         collections={collections}
-                        selectCollection={collection =>
-                            this.setState(
-                                {
-                                    sidebarSelected: {
-                                        ...this.state.sidebarSelected,
-                                        collectionID: collection
-                                    }
-                                },
-                                () => this.loadCollectionDetail(collection)
-                            )
+                        sidebarState={sidebarState}
+                        toggleExpand={id => this.toggleExpand(id)}
+                        loadContent={(collectionID, name, type) =>
+                            this.loadContent(collectionID, name, type)
                         }
+                        importCollection={collectionID => this.importCollection(collectionID)}
                     />
                 </div>
                 <div className="docs-col">
@@ -89,6 +78,45 @@ export class Root extends React.Component<{}, IState> {
                 </div>
             </div>
         );
+    }
+
+    private loadContent(collectionID, name, type) {
+        const collection = CollectionLoader.getCollection(
+            this.state.collections.byID[collectionID].path
+        );
+        const tabID = this.state.contentSelected.tab;
+
+        const content = CollectionLoader.getContent(collection, name, type);
+        console.log(collection);
+        const newTabs = [...this.state.tabs];
+
+        if (content.type === ViewType.plugin) {
+            newTabs[tabID] = {
+                view: ViewType.plugin,
+                data: { plugin: content.data, collectionID: collectionID }
+            };
+        } else {
+            newTabs[tabID] = {
+                view: ViewType.html,
+                data: { html: content.data, collectionID: collectionID }
+            };
+        }
+
+        this.setState({ tabs: newTabs });
+    }
+
+    private toggleExpand(id) {
+        const newSidebarState = { ...this.state.sidebarState };
+        const expanded = newSidebarState.expandedIDs;
+
+        const i = expanded.findIndex(x => x === id);
+        if (i === -1) {
+            expanded.push(id);
+        } else {
+            expanded.splice(i, 1);
+        }
+
+        this.setState({ sidebarState: newSidebarState });
     }
 
     private loadCollectionList() {
@@ -107,37 +135,25 @@ export class Root extends React.Component<{}, IState> {
                 onStandardErr: error => console.error(`stderr: ${error.toString()}`)
             })
                 .then(() => {
-                    this.loadCollectionDetail(collectionID);
+                    this.loadCollectionIndex(collectionID);
                 })
                 .catch(() => {
-                    const newTabs = { ...tabs };
+                    const newTabs = [...tabs];
                     newTabs[currentTab] = {
                         view: ViewType.error,
                         data: { collectionID: collectionID }
                     };
-                    this.setState({ tabs: tabs });
+                    this.setState({ tabs: newTabs });
                 });
         });
     }
 
-    private loadCollectionDetail(collectionID) {
-        const tabID = this.state.contentSelected.tab;
-        try {
-            const data = CollectionLoader.getCollection(
-                this.state.collections.byID[collectionID].path
-            );
-
-            const newCollections = { ...this.state.collections };
-            const newTabs = [...this.state.tabs];
-            newTabs[tabID] = { view: ViewType.docs, data: { collectionID: collectionID } };
-            newCollections.byID[collectionID].importedData = data;
-
-            this.setState({ collections: newCollections, tabs: newTabs });
-        } catch {
-            const newTabs = [...this.state.tabs];
-            newTabs[tabID] = { view: ViewType.load, data: { collectionID: collectionID } };
-
-            this.setState({ tabs: newTabs });
-        }
+    private loadCollectionIndex(collectionID) {
+        const data = CollectionLoader.getCollection(this.state.collections.byID[collectionID].path);
+        const newCollections = { ...this.state.collections };
+        newCollections.byID[collectionID].index = CollectionLoader.getCollectionIndex(
+            data.docs_blob
+        );
+        this.setState({ collections: newCollections });
     }
 }
