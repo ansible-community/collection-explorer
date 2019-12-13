@@ -1,8 +1,8 @@
 import * as React from 'react';
 import './collection-list.scss';
+import * as OS from 'os';
 
 import { AngleRightIcon, AngleDownIcon, FolderIcon } from '@patternfly/react-icons';
-import { Button } from '@patternfly/react-core';
 
 import { DirectoriesType, CollectionsType } from '../../../types';
 
@@ -56,7 +56,8 @@ export class CollectionList extends React.Component<IProps, {}> {
                                 <Expander
                                     name={
                                         <span>
-                                            <FolderIcon /> {directories.byID[v].path}
+                                            <FolderIcon />{' '}
+                                            {this.prettifyPath(directories.byID[v].path)}
                                         </span>
                                     }
                                     id={v}
@@ -146,5 +147,15 @@ export class CollectionList extends React.Component<IProps, {}> {
         }
 
         return <ul>{nodes.map(v => v)}</ul>;
+    }
+
+    private prettifyPath(path: string) {
+        const home = OS.homedir();
+
+        if (path.startsWith(home)) {
+            return `~${path.slice(home.length, path.length)}`;
+        }
+
+        return path;
     }
 }

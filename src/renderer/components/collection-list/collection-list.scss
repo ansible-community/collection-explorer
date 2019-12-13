@@ -1,12 +1,21 @@
 .collection-list {
     padding: 8px;
+    height: 100vh;
+    overflow-y: scroll;
+
     .nav-container {
         margin-left: -24px;
+
         ul {
             padding-left: 24px;
             margin-top: 8px;
             margin-left: 0px;
             list-style: none;
+
+            li {
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
         }
     }
 }

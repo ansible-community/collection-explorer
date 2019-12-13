@@ -17,6 +17,7 @@ interface IState {
     };
 
     sidebarState: {
+        width: number;
         expandedIDs: string[];
     };
 
@@ -26,6 +27,7 @@ interface IState {
 // renders markdown files in collection docs/ directory
 export class Root extends React.Component<{}, IState> {
     docsRef: any;
+    navRef: any;
 
     constructor(props) {
         super(props);
@@ -35,6 +37,7 @@ export class Root extends React.Component<{}, IState> {
             collections: { byID: {} },
 
             sidebarState: {
+                width: 300,
                 expandedIDs: []
             },
 
@@ -44,6 +47,7 @@ export class Root extends React.Component<{}, IState> {
             tabs: [{ view: null, data: null }]
         };
 
+        this.navRef = React.createRef();
         this.docsRef = React.createRef();
     }
 
@@ -51,12 +55,13 @@ export class Root extends React.Component<{}, IState> {
         this.loadCollectionList();
     }
 
+    dragStart: number;
+
     render() {
         const { directories, collections, tabs, contentSelected, sidebarState } = this.state;
-        console.log(this.state);
         return (
             <div className="main">
-                <div>
+                <div className="nav" ref={this.navRef} style={{ width: `${sidebarState.width}px` }}>
                     <CollectionList
                         directories={directories}
                         collections={collections}
@@ -68,6 +73,19 @@ export class Root extends React.Component<{}, IState> {
                         importCollection={collectionID => this.importCollection(collectionID)}
                     />
                 </div>
+                <div
+                    className="resizer"
+                    onMouseDown={e => document.addEventListener('mousemove', this.resize)}
+                    onMouseUp={e => {
+                        document.removeEventListener('mousemove', this.resize);
+
+                        // save the current width so it can be saved when the app
+                        // closes
+                        this.setState({
+                            sidebarState: { ...this.state.sidebarState, width: e.clientX }
+                        });
+                    }}
+                />
                 <div className="docs-col">
                     <Tab
                         tabs={tabs}
@@ -80,6 +98,10 @@ export class Root extends React.Component<{}, IState> {
         );
     }
 
+    private resize = e => {
+        this.navRef.current.style.width = `${e.clientX}px`;
+    };
+
     private loadContent(collectionID, name, type) {
         const collection = CollectionLoader.getCollection(
             this.state.collections.byID[collectionID].path
@@ -87,7 +109,6 @@ export class Root extends React.Component<{}, IState> {
         const tabID = this.state.contentSelected.tab;
 
         const content = CollectionLoader.getContent(collection, name, type);
-        console.log(collection);
         const newTabs = [...this.state.tabs];
 
         if (content.type === ViewType.plugin) {
@@ -121,7 +142,14 @@ export class Root extends React.Component<{}, IState> {
 
     private loadCollectionList() {
         const data = CollectionLoader.getCollectionList();
-        this.setState({ directories: data.directories, collections: data.collections });
+        this.setState({
+            directories: data.directories,
+            collections: data.collections,
+            sidebarState: {
+                ...this.state.sidebarState,
+                expandedIDs: Object.keys(data.directories.byID)
+            }
+        });
     }
     private importCollection(collectionID: string) {
         const tabs = [...this.state.tabs];

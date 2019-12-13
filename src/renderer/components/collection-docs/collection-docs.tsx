@@ -36,27 +36,27 @@ export class CollectionDocs extends React.Component<IProps> {
     render() {
         const { data, importCollection, collections, view } = this.props;
         const collection = collections.byID[data.collectionID];
-        console.log(collection);
 
         return (
             <React.Fragment>
-                <div className="collection-header">
-                    <div className="pf-c-content">
-                        <h1>
-                            {collection.namespace}.{collection.name}
-                        </h1>
-                    </div>
-                    <div>
-                        <Tooltip content="Reload Collection" entryDelay={0}>
-                            <RedoIcon
-                                className="reload-icon"
-                                onClick={() => importCollection(data.collectionID)}
-                            />
-                        </Tooltip>
-                    </div>
-                </div>
                 <div className="docs-container">
                     <div className="body docs" ref={this.docsRef}>
+                        <div className="collection-header">
+                            <div className="pf-c-content">
+                                <h1>
+                                    {collection.namespace}.{collection.name}
+                                </h1>
+                            </div>
+                            <div>
+                                <Tooltip content="Reload Collection" entryDelay={0}>
+                                    <RedoIcon
+                                        className="reload-icon"
+                                        onClick={() => importCollection(data.collectionID)}
+                                    />
+                                </Tooltip>
+                            </div>
+                        </div>
+
                         {view === ViewType.html ? (
                             <div
                                 className="pf-c-content"

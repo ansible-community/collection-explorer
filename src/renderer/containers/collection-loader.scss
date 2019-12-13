@@ -1,14 +1,16 @@
 .main {
     display: flex;
 
-    .collection-header {
-        padding: 8px;
-        display: flex;
-        justify-content: space-between;
+    .resizer {
+        width: 5px;
+        border: 0px;
+        cursor: col-resize;
+        flex-shrink: 0;
+    }
 
-        .reload-icon {
-            cursor: pointer;
-        }
+    .nav {
+        flex-shrink: 0;
+        min-width: 50px;
     }
 
     .docs-col {

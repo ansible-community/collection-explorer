@@ -1,22 +1,20 @@
 .docs-container {
     display: flex;
+    height: 100vh;
+    overflow-y: scroll;
 
-    .sidebar {
-        // This width lines up the border nicely with the tabs
-        min-width: 294px;
-        max-width: 294px;
-        border-right: 1px solid #d8d8d8;
-        padding: 0px;
-        padding-top: 0px;
+    .collection-header {
+        padding-top: 8px;
+        display: flex;
+        justify-content: space-between;
+
+        .reload-icon {
+            cursor: pointer;
+        }
     }
-
     .docs {
         flex-grow: 1;
         padding: 24px;
         padding-top: 0px;
-
-        // make the height close to the height ofthe page so short docs don't
-        // look weird
-        min-height: calc(100vh - 250px);
     }
 }
