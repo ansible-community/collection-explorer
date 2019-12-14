@@ -14,4 +14,4 @@ const render = (Component: () => JSX.Element) => {
     ReactDOM.render(<Component />, mainElement);
 };
 
-render(hot(() => <Root />));
+render(() => <Root />);

@@ -56,22 +56,26 @@ export class ImporterResultType {
     contents: any;
 }
 
+export class CollectionType {
+    name: string;
+    namespace: string;
+    path: string;
+
+    status?: 'loading' | 'error';
+
+    index?: DocsIndexType;
+
+    // collections may or may not be loaded
+    metadata?: {};
+
+    // no docs_blob in memory? That could be really inefficient
+    // maybe just store plugin data in tab data
+    // docs_blob?: {};
+}
+
 export class CollectionsType {
     byID: {
-        [key: string]: {
-            name: string;
-            namespace: string;
-            path: string;
-
-            index?: DocsIndexType;
-
-            // collections may or may not be loaded
-            metadata?: {};
-
-            // no docs_blob in memory? That could be really inefficient
-            // maybe just store plugin data in tab data
-            // docs_blob?: {};
-        };
+        [key: string]: CollectionType;
     };
 }
 

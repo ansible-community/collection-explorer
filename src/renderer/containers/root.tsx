@@ -1,10 +1,7 @@
 import * as React from 'react';
 import './collection-loader.scss';
 
-import { CollectionLoader } from '../../lib';
-import { Button, Tooltip } from '@patternfly/react-core';
-import { RedoIcon } from '@patternfly/react-icons';
-
+import { CollectionLoader, ImportManager } from '../../lib';
 import { Tab, CollectionList } from '../components';
 
 import { ViewType, TabType, DirectoriesType, CollectionsType } from '../../types';
@@ -28,6 +25,7 @@ interface IState {
 export class Root extends React.Component<{}, IState> {
     docsRef: any;
     navRef: any;
+    importQ: ImportManager;
 
     constructor(props) {
         super(props);
@@ -49,13 +47,12 @@ export class Root extends React.Component<{}, IState> {
 
         this.navRef = React.createRef();
         this.docsRef = React.createRef();
+        this.importQ = new ImportManager((err, task) => this.loadQueuedImport(err, task));
     }
 
     componentDidMount() {
         this.loadCollectionList();
     }
-
-    dragStart: number;
 
     render() {
         const { directories, collections, tabs, contentSelected, sidebarState } = this.state;
@@ -103,9 +100,7 @@ export class Root extends React.Component<{}, IState> {
     };
 
     private loadContent(collectionID, name, type) {
-        const collection = CollectionLoader.getCollection(
-            this.state.collections.byID[collectionID].path
-        );
+        const collection = CollectionLoader.getCollection(collectionID);
         const tabID = this.state.contentSelected.tab;
 
         const content = CollectionLoader.getContent(collection, name, type);
@@ -140,8 +135,33 @@ export class Root extends React.Component<{}, IState> {
         this.setState({ sidebarState: newSidebarState });
     }
 
+    private loadQueuedImport(error, task) {
+        const newCollections = { ...this.state.collections };
+
+        if (error !== null) {
+            newCollections.byID[task.collectionID].status = 'error';
+        } else {
+            const importResult = CollectionLoader.getCollection(task.collectionID);
+            const index = CollectionLoader.getCollectionIndex(importResult.docs_blob);
+            newCollections.byID[task.collectionID] = {
+                ...newCollections.byID[task.collectionID],
+                index: index,
+                metadata: importResult.metadata
+            };
+        }
+
+        this.setState({ collections: newCollections });
+    }
+
     private loadCollectionList() {
         const data = CollectionLoader.getCollectionList();
+
+        for (const id in data.collections.byID) {
+            if (!data.collections.byID[id].index) {
+                this.importQ.push({ collectionID: id, path: data.collections.byID[id].path });
+            }
+        }
+
         this.setState({
             directories: data.directories,
             collections: data.collections,
@@ -159,9 +179,13 @@ export class Root extends React.Component<{}, IState> {
             data: { collectionID: collectionID }
         };
         this.setState({ tabs: tabs }, () => {
-            CollectionLoader.importCollection(this.state.collections.byID[collectionID].path, {
-                onStandardErr: error => console.error(`stderr: ${error.toString()}`)
-            })
+            CollectionLoader.importCollection(
+                this.state.collections.byID[collectionID].path,
+                collectionID,
+                {
+                    onStandardErr: error => console.error(`stderr: ${error.toString()}`)
+                }
+            )
                 .then(() => {
                     this.loadCollectionIndex(collectionID);
                 })
@@ -177,7 +201,7 @@ export class Root extends React.Component<{}, IState> {
     }
 
     private loadCollectionIndex(collectionID) {
-        const data = CollectionLoader.getCollection(this.state.collections.byID[collectionID].path);
+        const data = CollectionLoader.getCollection(collectionID);
         const newCollections = { ...this.state.collections };
         newCollections.byID[collectionID].index = CollectionLoader.getCollectionIndex(
             data.docs_blob

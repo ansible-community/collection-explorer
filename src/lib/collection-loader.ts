@@ -10,7 +10,7 @@ import {
     DocsIndexType,
     ImporterResultType
 } from '../types';
-import { CollectionPathFinder, getBasePath, StateHelper } from '../lib';
+import { CollectionPathFinder, getBasePath, StateHelper, Config } from '../lib';
 
 export class CollectionLoader {
     // Returns a list of directories with their respective collections
@@ -33,10 +33,9 @@ export class CollectionLoader {
         return { collections: collections, directories: directories };
     }
 
-    static getCollection(path): ImporterResultType {
+    static getCollection(collectionID: string): ImporterResultType {
         try {
-            const file = Path.join(path, '_collection_explorer_cache.json');
-            return JSON.parse(FS.readFileSync(file).toString());
+            return JSON.parse(FS.readFileSync(this.getCachePath(collectionID)).toString());
         } catch {
             return null;
         }
@@ -44,6 +43,7 @@ export class CollectionLoader {
 
     static importCollection(
         collection_path: string,
+        collectionID: string,
         callbacks?: { onStandardErr?: (message) => void; onStandardOut?: (message) => void }
     ): Promise<any> {
         return new Promise((resolve, reject) => {
@@ -51,7 +51,6 @@ export class CollectionLoader {
             let exe: string;
             let path: string;
             const args = [];
-
             // if running in production mode, use the bundled python scripts
             if (process.env.NODE_ENV === 'production') {
                 exe = Path.join(rootDir, 'python', 'dist', 'importer_wrapper', 'importer_wrapper');
@@ -67,7 +66,7 @@ export class CollectionLoader {
                 args.push('python/importer_wrapper.py');
             }
 
-            const p = spawn(exe, args.concat([collection_path]), {
+            const p = spawn(exe, args.concat([collection_path, this.getCachePath(collectionID)]), {
                 env: {
                     PATH: path
                 }
@@ -215,35 +214,43 @@ export class CollectionLoader {
         return null;
     }
 
-    private static loadDir(c_path): CollectionsType {
+    private static loadDir(collectionsDir): CollectionsType {
         // Returns a list of collection in a given directory
         const collections: CollectionsType = { byID: {} };
-        for (const ns of FS.readdirSync(c_path)) {
-            if (FS.statSync(Path.join(c_path, ns)).isDirectory()) {
-                for (const collection of FS.readdirSync(Path.join(c_path, ns))) {
-                    const collectionDir = Path.join(c_path, ns, collection);
+        for (const ns of FS.readdirSync(collectionsDir)) {
+            if (FS.statSync(Path.join(collectionsDir, ns)).isDirectory()) {
+                for (const collection of FS.readdirSync(Path.join(collectionsDir, ns))) {
+                    const collectionDir = Path.join(collectionsDir, ns, collection);
 
                     if (
                         FS.statSync(collectionDir).isDirectory() &&
                         this.isCollection(FS.readdirSync(collectionDir))
                     ) {
-                        const col_path = Path.join(c_path, ns, collection);
-                        const id = StateHelper.getID(col_path);
-                        const importerData = this.getCollection(col_path);
+                        const collectionPath = Path.join(collectionsDir, ns, collection);
+                        const id = StateHelper.getID(collectionPath);
                         let index = null;
                         let metadata = null;
+                        let status = 'loading';
 
-                        if (importerData) {
-                            index = this.getCollectionIndex(importerData.docs_blob);
-                            metadata = importerData.metadata;
+                        // don't load the index for collections that are out of
+                        // date. This will cause the collection to get reimported
+                        if (!this.needsRefresh(collectionPath, id)) {
+                            const importerData = this.getCollection(id);
+                            status = null;
+
+                            if (importerData) {
+                                index = this.getCollectionIndex(importerData.docs_blob);
+                                metadata = importerData.metadata;
+                            }
                         }
 
                         collections.byID[id] = {
                             name: collection,
                             namespace: ns,
-                            path: col_path,
+                            path: collectionPath,
                             index: index,
-                            metadata: metadata
+                            metadata: metadata,
+                            status: status
                         };
                     }
                 }
@@ -251,6 +258,20 @@ export class CollectionLoader {
         }
 
         return collections;
+    }
+
+    private static needsRefresh(collectionPath: string, collectionID: string): boolean {
+        if (FS.existsSync(this.getCachePath(collectionID))) {
+            const collection = FS.statSync(collectionPath);
+            const collectionCache = FS.statSync(this.getCachePath(collectionID));
+
+            return collection.mtime > collectionCache.mtime;
+        }
+        return true;
+    }
+
+    private static getCachePath(collectionID) {
+        return Path.join(Config.getCacheDir(), collectionID);
     }
 
     private static isCollection(files: string[]): boolean {

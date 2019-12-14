@@ -95,14 +95,22 @@ export class CollectionList extends React.Component<IProps, {}> {
     renderIndex(collectionID) {
         const collection = this.props.collections.byID[collectionID];
         if (!collection.index) {
+            if (collection.status === 'loading') {
+                return (
+                    <ul>
+                        <li>
+                            <i>Loading...</i>
+                        </li>
+                    </ul>
+                );
+            }
+
             return (
                 <ul>
-                    <li>
-                        <i>Collection not loaded</i>
-                    </li>
+                    <li>Error loading collection</li>
                     <li>
                         <a onClick={() => this.props.importCollection(collectionID)}>
-                            Load {collection.namespace}.{collection.name}
+                            Reload {collection.namespace}.{collection.name}
                         </a>
                     </li>
                 </ul>
