@@ -66,7 +66,7 @@ export class CollectionType {
     index?: DocsIndexType;
 
     // collections may or may not be loaded
-    metadata?: {};
+    metadata?: any;
 
     // no docs_blob in memory? That could be really inefficient
     // maybe just store plugin data in tab data

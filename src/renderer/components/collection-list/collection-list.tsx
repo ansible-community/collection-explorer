@@ -68,7 +68,21 @@ export class CollectionList extends React.Component<IProps, {}> {
                                         {directories.byID[v].collectionIDs.map((x, j) => (
                                             <li style={{ cursor: 'pointer' }} key={j}>
                                                 <Expander
-                                                    name={`${collections.byID[x].namespace}.${collections.byID[x].name}`}
+                                                    name={
+                                                        <span>
+                                                            {collections.byID[x].namespace}.
+                                                            {collections.byID[x].name}{' '}
+                                                            {collections.byID[x].metadata ? (
+                                                                <i>
+                                                                    v
+                                                                    {
+                                                                        collections.byID[x].metadata
+                                                                            .version
+                                                                    }
+                                                                </i>
+                                                            ) : null}
+                                                        </span>
+                                                    }
                                                     id={x}
                                                     sidebarState={sidebarState}
                                                     toggleExpand={id => toggleExpand(id)}
