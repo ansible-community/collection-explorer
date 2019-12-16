@@ -56,12 +56,18 @@ export class ImporterResultType {
     contents: any;
 }
 
+export enum ImportStatusType {
+    loading = 'loading',
+    error = 'error',
+    imported = 'imported'
+}
+
 export class CollectionType {
     name: string;
     namespace: string;
     path: string;
 
-    status?: 'loading' | 'error';
+    status?: ImportStatus;
 
     index?: DocsIndexType;
 

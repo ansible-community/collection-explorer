@@ -4,7 +4,7 @@ import './collection-loader.scss';
 import { CollectionLoader, ImportManager } from '../../lib';
 import { Tab, CollectionList } from '../components';
 
-import { ViewType, TabType, DirectoriesType, CollectionsType } from '../../types';
+import { ViewType, TabType, DirectoriesType, CollectionsType, ImportStatusType } from '../../types';
 
 interface IState {
     directories: DirectoriesType;
@@ -67,7 +67,7 @@ export class Root extends React.Component<{}, IState> {
                         loadContent={(collectionID, name, type) =>
                             this.loadContent(collectionID, name, type)
                         }
-                        importCollection={collectionID => this.importCollection(collectionID)}
+                        importCollection={collectionID => this.queueCollection(collectionID)}
                     />
                 </div>
                 <div
@@ -88,7 +88,7 @@ export class Root extends React.Component<{}, IState> {
                         tabs={tabs}
                         contentSelected={contentSelected}
                         collections={collections}
-                        importCollection={collectionID => this.importCollection(collectionID)}
+                        importCollection={collectionID => this.queueCollection(collectionID)}
                     />
                 </div>
             </div>
@@ -132,21 +132,33 @@ export class Root extends React.Component<{}, IState> {
             expanded.splice(i, 1);
         }
 
-        this.setState({ sidebarState: newSidebarState });
+        this.setState({ sidebarState: newSidebarState }, () => {
+            const { collections } = this.state;
+            // If expanding a collection, and collection is open and collection is
+            // loading, push the collection to the top of the import queue
+            if (
+                Object.keys(collections.byID).includes(id) &&
+                this.state.sidebarState.expandedIDs.includes(id) &&
+                collections.byID[id].status === ImportStatusType.loading
+            ) {
+                this.importQ.prioritize({ collectionID: id, path: collections.byID[id].path });
+            }
+        });
     }
 
     private loadQueuedImport(error, task) {
         const newCollections = { ...this.state.collections };
 
         if (error !== null) {
-            newCollections.byID[task.collectionID].status = 'error';
+            newCollections.byID[task.collectionID].status = ImportStatusType.error;
         } else {
             const importResult = CollectionLoader.getCollection(task.collectionID);
             const index = CollectionLoader.getCollectionIndex(importResult.docs_blob);
             newCollections.byID[task.collectionID] = {
                 ...newCollections.byID[task.collectionID],
                 index: index,
-                metadata: importResult.metadata
+                metadata: importResult.metadata,
+                status: ImportStatusType.imported
             };
         }
 
@@ -171,32 +183,18 @@ export class Root extends React.Component<{}, IState> {
             }
         });
     }
-    private importCollection(collectionID: string) {
-        const tabs = [...this.state.tabs];
-        const currentTab = this.state.contentSelected.tab;
-        tabs[currentTab] = {
-            view: ViewType.loading,
-            data: { collectionID: collectionID }
-        };
-        this.setState({ tabs: tabs }, () => {
-            CollectionLoader.importCollection(
-                this.state.collections.byID[collectionID].path,
-                collectionID,
-                {
-                    onStandardErr: error => console.error(`stderr: ${error.toString()}`)
-                }
-            )
-                .then(() => {
-                    this.loadCollectionIndex(collectionID);
-                })
-                .catch(() => {
-                    const newTabs = [...tabs];
-                    newTabs[currentTab] = {
-                        view: ViewType.error,
-                        data: { collectionID: collectionID }
-                    };
-                    this.setState({ tabs: newTabs });
-                });
+
+    private queueCollection(collectionID) {
+        const collections = { ...this.state.collections };
+        collections.byID[collectionID].status = ImportStatusType.loading;
+        collections.byID[collectionID].metadata = null;
+        collections.byID[collectionID].index = null;
+
+        this.setState({ collections: collections }, () => {
+            this.importQ.push({
+                collectionID: collectionID,
+                path: this.state.collections.byID[collectionID].path
+            });
         });
     }
 

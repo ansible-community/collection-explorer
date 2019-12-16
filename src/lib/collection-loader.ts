@@ -8,7 +8,8 @@ import {
     CollectionsType,
     DocsEntryType,
     DocsIndexType,
-    ImporterResultType
+    ImporterResultType,
+    ImportStatusType
 } from '../types';
 import { CollectionPathFinder, getBasePath, StateHelper, Config } from '../lib';
 
@@ -230,13 +231,13 @@ export class CollectionLoader {
                         const id = StateHelper.getID(collectionPath);
                         let index = null;
                         let metadata = null;
-                        let status = 'loading';
+                        let status: ImportStatusType = ImportStatusType.loading;
 
                         // don't load the index for collections that are out of
                         // date. This will cause the collection to get reimported
                         if (!this.needsRefresh(collectionPath, id)) {
                             const importerData = this.getCollection(id);
-                            status = null;
+                            status = ImportStatusType.imported;
 
                             if (importerData) {
                                 index = this.getCollectionIndex(importerData.docs_blob);
