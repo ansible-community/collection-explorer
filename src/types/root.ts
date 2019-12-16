@@ -67,7 +67,7 @@ export class CollectionType {
     namespace: string;
     path: string;
 
-    status?: ImportStatus;
+    status?: ImportStatusType;
 
     index?: DocsIndexType;
 
@@ -87,5 +87,10 @@ export class CollectionsType {
 
 export class TabType {
     view: string;
+    name: string;
     data: ImportViewType | PluginViewType | HTMLViewType | ErrorViewType;
+}
+
+export class TabsType {
+    byID: { [key: string]: TabType };
 }

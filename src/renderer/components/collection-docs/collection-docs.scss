@@ -1,6 +1,6 @@
 .docs-container {
     display: flex;
-    height: 100vh;
+    height: calc(100vh - 40px);
     overflow-y: scroll;
 
     .collection-header {

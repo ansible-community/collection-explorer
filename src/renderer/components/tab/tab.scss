@@ -1,0 +1,28 @@
+.tab-list {
+    // This is a set of dirty hacks to make the close button clickable. For some
+    // reason patternfly tabs cover everything inside them, preventing elements
+    // from recieving click events. This lifts the close button out of the tab
+    // repositions it to look like it's in the tab, which makes it clickable.
+    .tab-container {
+        position: relative;
+        .close-button {
+            right: 8px;
+            top: 8px;
+            width: 24px;
+            position: absolute;
+            z-index: 1000;
+            text-align: center;
+            border-radius: 3px;
+        }
+
+        .close-button:hover {
+            color: white;
+            background-color: grey;
+        }
+
+        .close-spacer {
+            width: 24px;
+            display: inline-block;
+        }
+    }
+}

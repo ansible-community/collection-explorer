@@ -1,16 +1,23 @@
 import * as React from 'react';
-import './collection-loader.scss';
+import './root.scss';
 
 import { CollectionLoader, ImportManager } from '../../lib';
-import { Tab, CollectionList } from '../components';
+import { Tab, Tabs, CollectionList } from '../components';
 
-import { ViewType, TabType, DirectoriesType, CollectionsType, ImportStatusType } from '../../types';
+import {
+    ViewType,
+    TabType,
+    DirectoriesType,
+    CollectionsType,
+    ImportStatusType,
+    TabsType
+} from '../../types';
 
 interface IState {
     directories: DirectoriesType;
     collections: CollectionsType;
     contentSelected: {
-        tab: number;
+        tab: string;
     };
 
     sidebarState: {
@@ -18,7 +25,7 @@ interface IState {
         expandedIDs: string[];
     };
 
-    tabs: TabType[];
+    tabs: TabsType;
 }
 
 // renders markdown files in collection docs/ directory
@@ -40,9 +47,9 @@ export class Root extends React.Component<{}, IState> {
             },
 
             contentSelected: {
-                tab: 0
+                tab: null
             },
-            tabs: [{ view: null, data: null }]
+            tabs: { byID: {} }
         };
 
         this.navRef = React.createRef();
@@ -84,6 +91,33 @@ export class Root extends React.Component<{}, IState> {
                     }}
                 />
                 <div className="docs-col">
+                    <Tabs
+                        tabs={this.state.tabs}
+                        removeTab={id => {
+                            const newTabs = this.removeTab(id);
+                            let newSelectedTab;
+                            if (id === this.state.contentSelected.tab) {
+                                newSelectedTab = Object.keys(newTabs.byID)[
+                                    Object.keys(newTabs.byID).length - 1
+                                ];
+                            } else {
+                                newSelectedTab = this.state.contentSelected.tab;
+                            }
+                            this.setState({
+                                tabs: newTabs,
+                                contentSelected: {
+                                    ...this.state.contentSelected,
+                                    tab: newSelectedTab
+                                }
+                            });
+                        }}
+                        selectedTab={this.state.contentSelected.tab}
+                        setCurrentTab={tabID =>
+                            this.setState({
+                                contentSelected: { ...this.state.contentSelected, tab: tabID }
+                            })
+                        }
+                    />
                     <Tab
                         tabs={tabs}
                         contentSelected={contentSelected}
@@ -99,26 +133,72 @@ export class Root extends React.Component<{}, IState> {
         this.navRef.current.style.width = `${e.clientX}px`;
     };
 
-    private loadContent(collectionID, name, type) {
-        const collection = CollectionLoader.getCollection(collectionID);
-        const tabID = this.state.contentSelected.tab;
+    private addTab(content: TabType): { tabs: TabsType; id: string } {
+        // from https://stackoverflow.com/a/2117523
+        function uuidv4() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = (Math.random() * 16) | 0,
+                    v = c == 'x' ? r : (r & 0x3) | 0x8;
+                return v.toString(16);
+            });
+        }
 
-        const content = CollectionLoader.getContent(collection, name, type);
-        const newTabs = [...this.state.tabs];
+        const newTabs = { ...this.state.tabs };
+        const id = uuidv4();
+        newTabs.byID[id] = content;
+        return { tabs: newTabs, id: id };
+    }
+
+    private removeTab(id: string) {
+        const newTabs = { ...this.state.tabs };
+        delete newTabs.byID[id];
+        return newTabs;
+    }
+
+    private updateTab(id: number, newContent: TabType) {
+        const newTabs = { ...this.state.tabs };
+        newTabs[id] = newContent;
+        return newTabs;
+    }
+
+    private loadContent(collectionID, name, type) {
+        const collection = this.state.collections.byID[collectionID];
+        const tabName = `${collection.name}.${name}`;
+
+        // TODO: find a better way to identify a tab by the content in it
+        for (const key in this.state.tabs.byID) {
+            if (this.state.tabs.byID[key].name === tabName) {
+                this.setState({
+                    contentSelected: { ...this.state.contentSelected, tab: key }
+                });
+                return;
+            }
+        }
+
+        const importResult = CollectionLoader.getCollection(collectionID);
+        const content = CollectionLoader.getContent(importResult, name, type);
+
+        let newTab: TabType;
 
         if (content.type === ViewType.plugin) {
-            newTabs[tabID] = {
+            newTab = {
                 view: ViewType.plugin,
+                name: tabName,
                 data: { plugin: content.data, collectionID: collectionID }
             };
         } else {
-            newTabs[tabID] = {
+            newTab = {
                 view: ViewType.html,
+                name: tabName,
                 data: { html: content.data, collectionID: collectionID }
             };
         }
 
-        this.setState({ tabs: newTabs });
+        const newTabs = this.addTab(newTab);
+        this.setState({
+            tabs: newTabs.tabs,
+            contentSelected: { ...this.state.contentSelected, tab: newTabs.id }
+        });
     }
 
     private toggleExpand(id) {
@@ -196,14 +276,5 @@ export class Root extends React.Component<{}, IState> {
                 path: this.state.collections.byID[collectionID].path
             });
         });
-    }
-
-    private loadCollectionIndex(collectionID) {
-        const data = CollectionLoader.getCollection(collectionID);
-        const newCollections = { ...this.state.collections };
-        newCollections.byID[collectionID].index = CollectionLoader.getCollectionIndex(
-            data.docs_blob
-        );
-        this.setState({ collections: newCollections });
     }
 }

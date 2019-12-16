@@ -2,11 +2,11 @@ import * as React from 'react';
 import { Button, Tooltip } from '@patternfly/react-core';
 import { RedoIcon } from '@patternfly/react-icons';
 
-import { TabType, CollectionsType, ViewType, PluginViewType, HTMLViewType } from '../../../types';
+import { TabsType, CollectionsType, ViewType, PluginViewType, HTMLViewType } from '../../../types';
 import { CollectionDocs } from '../../components';
 
 interface IProps {
-    tabs: TabType[];
+    tabs: TabsType;
     contentSelected: any;
     collections: CollectionsType;
     importCollection: (collectionID) => void;
@@ -16,11 +16,14 @@ export class Tab extends React.Component<IProps, {}> {
     render() {
         const { contentSelected, tabs, collections, importCollection } = this.props;
 
-        if (tabs.length === 0 || contentSelected.tab >= tabs.length) {
+        if (
+            Object.keys(tabs.byID).length === 0 ||
+            !Object.keys(tabs.byID).includes(contentSelected.tab)
+        ) {
             return null;
         }
 
-        const currentTab = tabs[contentSelected.tab];
+        const currentTab = tabs.byID[contentSelected.tab];
         let collection;
         switch (currentTab.view) {
             case ViewType.plugin:
