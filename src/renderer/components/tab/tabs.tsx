@@ -17,29 +17,31 @@ export class Tabs extends React.Component<IProps> {
 
         return (
             <div className="pf-c-tabs tab-list">
-                <ul className="pf-c-tabs__list">
+                <div className="pf-c-tabs__list tabs">
                     {Object.keys(tabs.byID).map(tabID => (
-                        <li
+                        <div
                             key={tabID}
                             className={`pf-c-tabs__item tab-container ${
                                 selectedTab === tabID ? 'pf-m-current' : ''
                             }`}
                         >
                             <div
-                                className="pf-c-tabs__button"
+                                className="pf-c-tabs__button tab-button"
                                 onClick={() => this.props.setCurrentTab(tabID)}
                             >
-                                {tabs.byID[tabID].name} <div className="close-spacer" />
+                                {tabs.byID[tabID].name}
                             </div>
-                            <div
-                                className="close-button"
-                                onClick={() => this.props.removeTab(tabID)}
-                            >
-                                <CloseIcon />
+                            <div className="close-button-container">
+                                <div
+                                    className="close-button"
+                                    onClick={() => this.props.removeTab(tabID)}
+                                >
+                                    <CloseIcon />
+                                </div>
                             </div>
-                        </li>
+                        </div>
                     ))}
-                </ul>
+                </div>
             </div>
         );
     }

@@ -10,6 +10,8 @@ import {
     DirectoriesType,
     CollectionsType,
     ImportStatusType,
+    HTMLViewType,
+    PluginViewType,
     TabsType
 } from '../../types';
 
@@ -163,11 +165,16 @@ export class Root extends React.Component<{}, IState> {
 
     private loadContent(collectionID, name, type) {
         const collection = this.state.collections.byID[collectionID];
-        const tabName = `${collection.name}.${name}`;
 
-        // TODO: find a better way to identify a tab by the content in it
         for (const key in this.state.tabs.byID) {
-            if (this.state.tabs.byID[key].name === tabName) {
+            const tabData: HTMLViewType | PluginViewType = this.state.tabs.byID[key].data as
+                | HTMLViewType
+                | PluginViewType;
+            if (
+                tabData.collectionID === collectionID &&
+                tabData.contentName === name &&
+                tabData.contentType === type
+            ) {
                 this.setState({
                     contentSelected: { ...this.state.contentSelected, tab: key }
                 });
@@ -183,14 +190,24 @@ export class Root extends React.Component<{}, IState> {
         if (content.type === ViewType.plugin) {
             newTab = {
                 view: ViewType.plugin,
-                name: tabName,
-                data: { plugin: content.data, collectionID: collectionID }
+                name: name,
+                data: {
+                    plugin: content.data,
+                    collectionID: collectionID,
+                    contentName: name,
+                    contentType: type
+                }
             };
         } else {
             newTab = {
                 view: ViewType.html,
-                name: tabName,
-                data: { html: content.data, collectionID: collectionID }
+                name: name,
+                data: {
+                    html: content.data,
+                    collectionID: collectionID,
+                    contentName: name,
+                    contentType: type
+                }
             };
         }
 

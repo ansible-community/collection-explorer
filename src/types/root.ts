@@ -17,14 +17,18 @@ export class ImportViewType {
     collectionID: string;
 }
 
-export class PluginViewType {
-    plugin: any;
+class ContentViewBase {
     collectionID: string;
+    contentName: string;
+    contentType: string;
 }
 
-export class HTMLViewType {
+export class PluginViewType extends ContentViewBase {
+    plugin: any;
+}
+
+export class HTMLViewType extends ContentViewBase {
     html: string;
-    collectionID: string;
 }
 
 export class DirectoriesType {
