@@ -2,7 +2,7 @@ import * as React from 'react';
 import './collection-list.scss';
 import * as OS from 'os';
 
-import { AngleRightIcon, AngleDownIcon, FolderIcon } from '@patternfly/react-icons';
+import { AngleRightIcon, AngleDownIcon, FolderIcon, SearchIcon } from '@patternfly/react-icons';
 
 import { DirectoriesType, CollectionsType } from '../../../types';
 
@@ -13,6 +13,7 @@ interface IProps {
     toggleExpand: (id) => void;
     loadContent: (collectionID, name, type) => void;
     importCollection: (id) => void;
+    openSearch: () => void;
 }
 
 class Expander extends React.Component<{
@@ -45,62 +46,72 @@ class Expander extends React.Component<{
 
 export class CollectionList extends React.Component<IProps, {}> {
     render() {
-        const { directories, collections, sidebarState, toggleExpand } = this.props;
+        const { directories, collections, sidebarState, toggleExpand, openSearch } = this.props;
         return (
-            <div className="pf-c-content collection-list">
-                Collections
-                <div className="nav-container">
-                    <ul>
-                        {Object.keys(directories.byID).map((v, i) => (
-                            <li key={i}>
-                                <Expander
-                                    name={
-                                        <span>
-                                            <FolderIcon />{' '}
-                                            {this.prettifyPath(directories.byID[v].path)}
-                                        </span>
-                                    }
-                                    id={v}
-                                    sidebarState={sidebarState}
-                                    toggleExpand={id => toggleExpand(id)}
-                                >
-                                    <ul>
-                                        {directories.byID[v].collectionIDs.map((x, j) => (
-                                            <li style={{ cursor: 'pointer' }} key={j}>
-                                                <Expander
-                                                    name={
-                                                        <span>
-                                                            {collections.byID[x].namespace}.
-                                                            {collections.byID[x].name}{' '}
-                                                            {collections.byID[x].metadata ? (
-                                                                <i>
-                                                                    v
-                                                                    {
-                                                                        collections.byID[x].metadata
-                                                                            .version
-                                                                    }
-                                                                </i>
-                                                            ) : null}
-                                                        </span>
-                                                    }
-                                                    id={x}
-                                                    sidebarState={sidebarState}
-                                                    toggleExpand={id => toggleExpand(id)}
-                                                >
-                                                    {this.renderIndex(x)}
-                                                </Expander>
-                                            </li>
-                                        ))}
-                                        {directories.byID[v].collectionIDs.length === 0 && (
-                                            <li>
-                                                <i>No collections found</i>
-                                            </li>
-                                        )}
-                                    </ul>
-                                </Expander>
-                            </li>
-                        ))}
-                    </ul>
+            <div className="collection-nav">
+                <div className="pf-c-content collection-list">
+                    Collections
+                    <div className="nav-container">
+                        <ul>
+                            {Object.keys(directories.byID).map((v, i) => (
+                                <li key={i}>
+                                    <Expander
+                                        name={
+                                            <span>
+                                                <FolderIcon />{' '}
+                                                {this.prettifyPath(directories.byID[v].path)}
+                                            </span>
+                                        }
+                                        id={v}
+                                        sidebarState={sidebarState}
+                                        toggleExpand={id => toggleExpand(id)}
+                                    >
+                                        <ul>
+                                            {directories.byID[v].collectionIDs.map((x, j) => (
+                                                <li style={{ cursor: 'pointer' }} key={j}>
+                                                    <Expander
+                                                        name={
+                                                            <span>
+                                                                {collections.byID[x].namespace}.
+                                                                {collections.byID[x].name}{' '}
+                                                                {collections.byID[x].metadata ? (
+                                                                    <i>
+                                                                        v
+                                                                        {
+                                                                            collections.byID[x]
+                                                                                .metadata.version
+                                                                        }
+                                                                    </i>
+                                                                ) : null}
+                                                            </span>
+                                                        }
+                                                        id={x}
+                                                        sidebarState={sidebarState}
+                                                        toggleExpand={id => toggleExpand(id)}
+                                                    >
+                                                        {this.renderIndex(x)}
+                                                    </Expander>
+                                                </li>
+                                            ))}
+                                            {directories.byID[v].collectionIDs.length === 0 && (
+                                                <li>
+                                                    <i>No collections found</i>
+                                                </li>
+                                            )}
+                                        </ul>
+                                    </Expander>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+
+                <div className="controls">
+                    <div className="control" onClick={() => openSearch()}>
+                        <div className="inner">
+                            <SearchIcon size="md" />
+                        </div>
+                    </div>
                 </div>
             </div>
         );

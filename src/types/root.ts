@@ -3,7 +3,8 @@ export enum ViewType {
     html = 'html',
     load = 'load',
     loading = 'loading',
-    error = 'error'
+    error = 'error',
+    search = 'search'
 }
 
 export class ErrorViewType {
@@ -29,6 +30,10 @@ export class PluginViewType extends ContentViewBase {
 
 export class HTMLViewType extends ContentViewBase {
     html: string;
+}
+
+export class SearchViewType {
+    keyword: string;
 }
 
 export class DirectoriesType {
@@ -92,7 +97,7 @@ export class CollectionsType {
 export class TabType {
     view: string;
     name: string;
-    data: ImportViewType | PluginViewType | HTMLViewType | ErrorViewType;
+    data: ImportViewType | PluginViewType | HTMLViewType | ErrorViewType | SearchViewType;
 }
 
 export class TabsType {

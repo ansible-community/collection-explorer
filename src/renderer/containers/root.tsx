@@ -51,7 +51,9 @@ export class Root extends React.Component<{}, IState> {
             contentSelected: {
                 tab: null
             },
-            tabs: { byID: {} }
+            tabs: {
+                byID: {}
+            }
         };
 
         this.navRef = React.createRef();
@@ -77,6 +79,7 @@ export class Root extends React.Component<{}, IState> {
                             this.loadContent(collectionID, name, type)
                         }
                         importCollection={collectionID => this.queueCollection(collectionID)}
+                        openSearch={() => this.loadSearch()}
                     />
                 </div>
                 <div
@@ -125,6 +128,10 @@ export class Root extends React.Component<{}, IState> {
                         contentSelected={contentSelected}
                         collections={collections}
                         importCollection={collectionID => this.queueCollection(collectionID)}
+                        updateTab={(id, content) =>
+                            this.setState({ tabs: this.updateTab(id, content) })
+                        }
+                        loadContent={(id, name, type) => this.loadContent(id, name, type)}
                     />
                 </div>
             </div>
@@ -135,7 +142,7 @@ export class Root extends React.Component<{}, IState> {
         this.navRef.current.style.width = `${e.clientX}px`;
     };
 
-    private addTab(content: TabType): { tabs: TabsType; id: string } {
+    private addTab(content: TabType, tabID?: string): { tabs: TabsType; id: string } {
         // from https://stackoverflow.com/a/2117523
         function uuidv4() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -146,7 +153,7 @@ export class Root extends React.Component<{}, IState> {
         }
 
         const newTabs = { ...this.state.tabs };
-        const id = uuidv4();
+        const id = tabID || uuidv4();
         newTabs.byID[id] = content;
         return { tabs: newTabs, id: id };
     }
@@ -159,8 +166,26 @@ export class Root extends React.Component<{}, IState> {
 
     private updateTab(id: number, newContent: TabType) {
         const newTabs = { ...this.state.tabs };
-        newTabs[id] = newContent;
+        newTabs.byID[id] = newContent;
         return newTabs;
+    }
+
+    private loadSearch() {
+        if (Object.keys(this.state.tabs.byID).includes('search')) {
+            this.setState({ contentSelected: { ...this.state.contentSelected, tab: 'search' } });
+        } else {
+            this.setState({
+                tabs: this.addTab(
+                    {
+                        view: ViewType.search,
+                        name: 'Search',
+                        data: { keyword: '' }
+                    },
+                    'search'
+                ).tabs,
+                contentSelected: { ...this.state.contentSelected, tab: 'search' }
+            });
+        }
     }
 
     private loadContent(collectionID, name, type) {

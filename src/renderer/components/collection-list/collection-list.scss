@@ -1,21 +1,43 @@
-.collection-list {
-    padding: 8px;
-    height: 100vh;
-    overflow-y: scroll;
+.collection-nav {
+    .collection-list {
+        padding: 8px;
+        height: calc(100vh - 50px);
+        overflow-y: scroll;
 
-    .nav-container {
-        margin-left: -24px;
+        .nav-container {
+            margin-left: -24px;
 
-        ul {
-            padding-left: 24px;
-            margin-top: 8px;
-            margin-left: 0px;
-            list-style: none;
+            ul {
+                padding-left: 24px;
+                margin-top: 8px;
+                margin-left: 0px;
+                list-style: none;
 
-            li {
-                white-space: nowrap;
-                text-overflow: ellipsis;
+                li {
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
             }
+        }
+    }
+
+    .controls {
+        height: 50px;
+        display: flex;
+
+        .control {
+            flex-grow: 1;
+            border-top: 1px solid #ebebeb;
+            border-left: 1px solid #ebebeb;
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control:hover {
+            color: white;
+            background-color: grey;
         }
     }
 }
