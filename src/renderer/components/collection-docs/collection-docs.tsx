@@ -20,7 +20,6 @@ import { CollectionsType, HTMLViewType, PluginViewType, ViewType } from '../../.
 interface IProps {
     data: HTMLViewType | PluginViewType;
     view: ViewType.plugin | ViewType.html;
-    importCollection: (collectionID) => void;
     collections: CollectionsType;
 }
 
@@ -34,7 +33,7 @@ export class CollectionDocs extends React.Component<IProps> {
     }
 
     render() {
-        const { data, importCollection, collections, view } = this.props;
+        const { data, collections, view } = this.props;
         const collection = collections.byID[data.collectionID];
 
         return (
@@ -46,14 +45,6 @@ export class CollectionDocs extends React.Component<IProps> {
                                 <h1>
                                     {collection.namespace}.{collection.name}
                                 </h1>
-                            </div>
-                            <div>
-                                <Tooltip content="Reload Collection" entryDelay={0}>
-                                    <RedoIcon
-                                        className="reload-icon"
-                                        onClick={() => importCollection(data.collectionID)}
-                                    />
-                                </Tooltip>
                             </div>
                         </div>
 

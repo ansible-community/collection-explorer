@@ -1,7 +1,7 @@
 .collection-nav {
     .collection-list {
         padding: 8px;
-        height: calc(100vh - 50px);
+        height: calc(100vh - 35px);
         overflow-y: scroll;
 
         .nav-container {
@@ -22,7 +22,7 @@
     }
 
     .controls {
-        height: 50px;
+        height: 35px;
         display: flex;
 
         .control {

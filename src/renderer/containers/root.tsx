@@ -80,6 +80,7 @@ export class Root extends React.Component<{}, IState> {
                         }
                         importCollection={collectionID => this.queueCollection(collectionID)}
                         openSearch={() => this.loadSearch()}
+                        loadCollectionList={() => this.loadCollectionList()}
                     />
                 </div>
                 <div
@@ -127,7 +128,6 @@ export class Root extends React.Component<{}, IState> {
                         tabs={tabs}
                         contentSelected={contentSelected}
                         collections={collections}
-                        importCollection={collectionID => this.queueCollection(collectionID)}
                         updateTab={(id, content) =>
                             this.setState({ tabs: this.updateTab(id, content) })
                         }
@@ -296,12 +296,20 @@ export class Root extends React.Component<{}, IState> {
             }
         }
 
+        let defaultExpanded;
+
+        if (this.state.sidebarState.expandedIDs.length > 0) {
+            defaultExpanded = this.state.sidebarState.expandedIDs;
+        } else {
+            defaultExpanded = Object.keys(data.directories.byID);
+        }
+
         this.setState({
             directories: data.directories,
             collections: data.collections,
             sidebarState: {
                 ...this.state.sidebarState,
-                expandedIDs: Object.keys(data.directories.byID)
+                expandedIDs: defaultExpanded
             }
         });
     }

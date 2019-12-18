@@ -2,7 +2,15 @@ import * as React from 'react';
 import './collection-list.scss';
 import * as OS from 'os';
 
-import { AngleRightIcon, AngleDownIcon, FolderIcon, SearchIcon } from '@patternfly/react-icons';
+import {
+    AngleRightIcon,
+    AngleDownIcon,
+    FolderIcon,
+    SearchIcon,
+    RedoIcon
+} from '@patternfly/react-icons';
+
+import { Tooltip } from '@patternfly/react-core';
 
 import { DirectoriesType, CollectionsType } from '../../../types';
 
@@ -14,6 +22,7 @@ interface IProps {
     loadContent: (collectionID, name, type) => void;
     importCollection: (id) => void;
     openSearch: () => void;
+    loadCollectionList: () => void;
 }
 
 class Expander extends React.Component<{
@@ -46,7 +55,14 @@ class Expander extends React.Component<{
 
 export class CollectionList extends React.Component<IProps, {}> {
     render() {
-        const { directories, collections, sidebarState, toggleExpand, openSearch } = this.props;
+        const {
+            directories,
+            collections,
+            sidebarState,
+            toggleExpand,
+            openSearch,
+            loadCollectionList
+        } = this.props;
         return (
             <div className="collection-nav">
                 <div className="pf-c-content collection-list">
@@ -109,9 +125,17 @@ export class CollectionList extends React.Component<IProps, {}> {
                 <div className="controls">
                     <div className="control" onClick={() => openSearch()}>
                         <div className="inner">
-                            <SearchIcon size="md" />
+                            <SearchIcon />
                         </div>
                     </div>
+
+                    <Tooltip content="Reload Collections" entryDelay={500}>
+                        <div className="control" onClick={() => loadCollectionList()}>
+                            <div className="inner">
+                                <RedoIcon className="reload-icon" />
+                            </div>
+                        </div>
+                    </Tooltip>
                 </div>
             </div>
         );

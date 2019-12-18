@@ -17,21 +17,13 @@ interface IProps {
     tabs: TabsType;
     contentSelected: any;
     collections: CollectionsType;
-    importCollection: (collectionID) => void;
     updateTab: (id, newContent: TabType) => void;
     loadContent: (collectionID, name, type) => void;
 }
 
 export class Tab extends React.Component<IProps, {}> {
     render() {
-        const {
-            contentSelected,
-            tabs,
-            collections,
-            importCollection,
-            updateTab,
-            loadContent
-        } = this.props;
+        const { contentSelected, tabs, collections, updateTab, loadContent } = this.props;
 
         if (
             Object.keys(tabs.byID).length === 0 ||
@@ -51,7 +43,6 @@ export class Tab extends React.Component<IProps, {}> {
                             <CollectionDocs
                                 data={currentTab.data as PluginViewType}
                                 view={currentTab.view}
-                                importCollection={collectionID => importCollection(collectionID)}
                                 collections={collections}
                             />
                         </div>
@@ -66,27 +57,11 @@ export class Tab extends React.Component<IProps, {}> {
                             <CollectionDocs
                                 data={currentTab.data as HTMLViewType}
                                 view={currentTab.view}
-                                importCollection={collectionID => importCollection(collectionID)}
                                 collections={collections}
                             />
                         </div>
                     </div>
                 );
-
-            // case ViewType.load:
-            //     collection = collections.byID[currentTab.data.collectionID];
-            //
-            //     return (
-            //         <div>
-            //             <Button onClick={() => importCollection(currentTab.data.collectionID)}>
-            //                 Load {collection.namespace}.{collection.name}
-            //             </Button>
-            //         </div>
-            //     );
-            // case ViewType.loading:
-            //     return <div>Loading collection</div>;
-            // case ViewType.error:
-            //     return <div>Error loading colleciton</div>;
             case ViewType.search:
                 return (
                     <Search
