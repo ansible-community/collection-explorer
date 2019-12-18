@@ -45,8 +45,10 @@ export class CollectionPathFinder {
 
     private static parseConfig(varConfig, configPath: string): string {
         const ini = INI.parse(fs.readFileSync(configPath).toString());
+        const iniLocation = varConfig.ini[0];
+
         try {
-            return ini[varConfig.section][varConfig.key];
+            return ini[iniLocation.section][iniLocation.key];
         } catch {
             return null;
         }
