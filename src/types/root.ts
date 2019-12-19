@@ -1,20 +1,11 @@
 export enum ViewType {
     plugin = 'plugin',
     html = 'html',
-    load = 'load',
-    loading = 'loading',
-    error = 'error',
-    search = 'search'
-}
-
-export class ErrorViewType {
-    collectionID: string;
+    search = 'search',
+    importer = 'importer'
 }
 
 export class ImportViewType {
-    // errorMessage: string;
-    // importMessages: string;
-    // status: string;
     collectionID: string;
 }
 
@@ -71,21 +62,21 @@ export enum ImportStatusType {
     imported = 'imported'
 }
 
+export class StdOutType {
+    type: 'stdout' | 'stderr';
+    message: string;
+}
+
 export class CollectionType {
     name: string;
     namespace: string;
     path: string;
 
-    status?: ImportStatusType;
-
-    index?: DocsIndexType;
-
     // collections may or may not be loaded
+    status?: ImportStatusType;
+    index?: DocsIndexType;
     metadata?: any;
-
-    // no docs_blob in memory? That could be really inefficient
-    // maybe just store plugin data in tab data
-    // docs_blob?: {};
+    importerLog?: StdOutType[];
 }
 
 export class CollectionsType {
@@ -97,7 +88,7 @@ export class CollectionsType {
 export class TabType {
     view: string;
     name: string;
-    data: ImportViewType | PluginViewType | HTMLViewType | ErrorViewType | SearchViewType;
+    data: ImportViewType | PluginViewType | HTMLViewType | SearchViewType;
 }
 
 export class TabsType {

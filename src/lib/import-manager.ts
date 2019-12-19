@@ -1,6 +1,8 @@
 import { CollectionLoader } from '../lib';
 import queue from 'async/queue';
 
+import { StdOutType } from '../types';
+
 class Task {
     collectionID: string;
     path: string;
@@ -8,9 +10,9 @@ class Task {
 
 export class ImportManager {
     q: any;
-    callback: (err: any, task: any) => void;
+    callback: (err: any, task: any, out: StdOutType[]) => void;
 
-    constructor(callback: (err: any, task: Task) => void) {
+    constructor(callback: (err: any, task: any, out: StdOutType[]) => void) {
         this.callback = callback;
         this.q = queue(this.importCollection, 1);
     }
@@ -24,11 +26,17 @@ export class ImportManager {
         this.q.unshift(task, this.callback);
     }
 
-    private async importCollection(task: Task, callback: (err: string, task: Task) => void) {
+    private async importCollection(
+        task: Task,
+        callback: (err: any, task: any, out: StdOutType[]) => void
+    ) {
+        const out: { type: 'stdout' | 'stderr'; message: string }[] = [];
+
         CollectionLoader.importCollection(task.path, task.collectionID, {
-            // onStandardErr: error => console.error(`stderr: ${error.toString()}`)
+            onStandardErr: stdErr => out.push({ type: 'stderr', message: stdErr.toString() }),
+            onStandardOut: stdOut => out.push({ type: 'stdout', message: stdOut.toString() })
         })
-            .then(r => callback(null, task))
-            .catch(r => callback('it broke', task));
+            .then(r => callback(null, task, out))
+            .catch(r => callback('it broke', task, out));
     }
 }

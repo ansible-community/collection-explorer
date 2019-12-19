@@ -36,7 +36,7 @@ export class Search extends React.Component<IProps> {
             }
         }
         return (
-            <div style={{ padding: '24px' }}>
+            <div>
                 <div>
                     <TextInput
                         aria-label="search"

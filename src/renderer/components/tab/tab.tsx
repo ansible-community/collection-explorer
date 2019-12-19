@@ -9,7 +9,8 @@ import {
     ViewType,
     PluginViewType,
     HTMLViewType,
-    SearchViewType
+    SearchViewType,
+    ImportViewType
 } from '../../../types';
 import { CollectionDocs, Search } from '../../components';
 
@@ -23,6 +24,10 @@ interface IProps {
 
 export class Tab extends React.Component<IProps, {}> {
     render() {
+        return <div>{this.renderTab()}</div>;
+    }
+
+    private renderTab() {
         const { contentSelected, tabs, collections, updateTab, loadContent } = this.props;
 
         if (
@@ -71,6 +76,31 @@ export class Tab extends React.Component<IProps, {}> {
                         updateTab={(id, val) => updateTab(id, val)}
                         loadContent={(id, name, type) => loadContent(id, name, type)}
                     />
+                );
+            case ViewType.importer:
+                collection = collections.byID[(currentTab.data as ImportViewType).collectionID];
+
+                if (!collection.importerLog) {
+                    return <div>No import results</div>;
+                }
+                return (
+                    <div className="pf-c-content">
+                        <h1>
+                            Import log: {collection.namespace}.{collection.name}
+                        </h1>
+                        <div style={{ padding: '24px', overflowX: 'scroll' }}>
+                            <pre>
+                                {collection.importerLog.map((entry, i) => (
+                                    <code
+                                        style={entry.type === 'stderr' ? { color: 'red' } : {}}
+                                        key={i}
+                                    >
+                                        {entry.message}
+                                    </code>
+                                ))}
+                            </pre>
+                        </div>
+                    </div>
                 );
             default:
                 return null;

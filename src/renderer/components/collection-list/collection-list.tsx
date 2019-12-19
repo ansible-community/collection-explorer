@@ -7,7 +7,8 @@ import {
     AngleDownIcon,
     FolderIcon,
     SearchIcon,
-    RedoIcon
+    RedoIcon,
+    ErrorCircleOIcon
 } from '@patternfly/react-icons';
 
 import { Tooltip } from '@patternfly/react-core';
@@ -23,6 +24,7 @@ interface IProps {
     importCollection: (id) => void;
     openSearch: () => void;
     loadCollectionList: () => void;
+    loadImporterView: (id) => void;
 }
 
 class Expander extends React.Component<{
@@ -61,7 +63,8 @@ export class CollectionList extends React.Component<IProps, {}> {
             sidebarState,
             toggleExpand,
             openSearch,
-            loadCollectionList
+            loadCollectionList,
+            loadImporterView
         } = this.props;
         return (
             <div className="collection-nav">
@@ -69,47 +72,69 @@ export class CollectionList extends React.Component<IProps, {}> {
                     Collections
                     <div className="nav-container">
                         <ul>
-                            {Object.keys(directories.byID).map((v, i) => (
+                            {Object.keys(directories.byID).map((dirId, i) => (
                                 <li key={i}>
                                     <Expander
                                         name={
                                             <span>
                                                 <FolderIcon />{' '}
-                                                {this.prettifyPath(directories.byID[v].path)}
+                                                {this.prettifyPath(directories.byID[dirId].path)}
                                             </span>
                                         }
-                                        id={v}
+                                        id={dirId}
                                         sidebarState={sidebarState}
                                         toggleExpand={id => toggleExpand(id)}
                                     >
                                         <ul>
-                                            {directories.byID[v].collectionIDs.map((x, j) => (
+                                            {directories.byID[dirId].collectionIDs.map((cId, j) => (
                                                 <li style={{ cursor: 'pointer' }} key={j}>
-                                                    <Expander
-                                                        name={
-                                                            <span>
-                                                                {collections.byID[x].namespace}.
-                                                                {collections.byID[x].name}{' '}
-                                                                {collections.byID[x].metadata ? (
-                                                                    <i>
-                                                                        v
-                                                                        {
-                                                                            collections.byID[x]
-                                                                                .metadata.version
-                                                                        }
-                                                                    </i>
-                                                                ) : null}
-                                                            </span>
-                                                        }
-                                                        id={x}
-                                                        sidebarState={sidebarState}
-                                                        toggleExpand={id => toggleExpand(id)}
-                                                    >
-                                                        {this.renderIndex(x)}
-                                                    </Expander>
+                                                    {collections.byID[cId].status === 'error' ? (
+                                                        <span>
+                                                            <Tooltip content="View error">
+                                                                <span
+                                                                    style={{ color: 'red' }}
+                                                                    onClick={() =>
+                                                                        loadImporterView(cId)
+                                                                    }
+                                                                >
+                                                                    <ErrorCircleOIcon />{' '}
+                                                                </span>
+                                                            </Tooltip>
+                                                            {collections.byID[cId].namespace}.
+                                                            {collections.byID[cId].name}{' '}
+                                                        </span>
+                                                    ) : (
+                                                        <Expander
+                                                            name={
+                                                                <span>
+                                                                    {
+                                                                        collections.byID[cId]
+                                                                            .namespace
+                                                                    }
+                                                                    .{collections.byID[cId].name}{' '}
+                                                                    {collections.byID[cId]
+                                                                        .metadata ? (
+                                                                        <i>
+                                                                            v
+                                                                            {
+                                                                                collections.byID[
+                                                                                    cId
+                                                                                ].metadata.version
+                                                                            }
+                                                                        </i>
+                                                                    ) : null}
+                                                                </span>
+                                                            }
+                                                            id={cId}
+                                                            sidebarState={sidebarState}
+                                                            toggleExpand={id => toggleExpand(id)}
+                                                        >
+                                                            {this.renderIndex(cId)}
+                                                        </Expander>
+                                                    )}
                                                 </li>
                                             ))}
-                                            {directories.byID[v].collectionIDs.length === 0 && (
+                                            {directories.byID[dirId].collectionIDs.length === 0 && (
                                                 <li>
                                                     <i>No collections found</i>
                                                 </li>
@@ -157,11 +182,6 @@ export class CollectionList extends React.Component<IProps, {}> {
             return (
                 <ul>
                     <li>Error loading collection</li>
-                    <li>
-                        <a onClick={() => this.props.importCollection(collectionID)}>
-                            Reload {collection.namespace}.{collection.name}
-                        </a>
-                    </li>
                 </ul>
             );
         }

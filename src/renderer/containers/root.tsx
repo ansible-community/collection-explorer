@@ -12,7 +12,8 @@ import {
     ImportStatusType,
     HTMLViewType,
     PluginViewType,
-    TabsType
+    TabsType,
+    StdOutType
 } from '../../types';
 
 interface IState {
@@ -58,7 +59,9 @@ export class Root extends React.Component<{}, IState> {
 
         this.navRef = React.createRef();
         this.docsRef = React.createRef();
-        this.importQ = new ImportManager((err, task) => this.loadQueuedImport(err, task));
+        this.importQ = new ImportManager((err, task, stdOut) =>
+            this.loadQueuedImport(err, task, stdOut)
+        );
     }
 
     componentDidMount() {
@@ -81,6 +84,7 @@ export class Root extends React.Component<{}, IState> {
                         importCollection={collectionID => this.queueCollection(collectionID)}
                         openSearch={() => this.loadSearch()}
                         loadCollectionList={() => this.loadCollectionList()}
+                        loadImporterView={id => this.loadImporterView(id)}
                     />
                 </div>
                 <div
@@ -124,15 +128,17 @@ export class Root extends React.Component<{}, IState> {
                             })
                         }
                     />
-                    <Tab
-                        tabs={tabs}
-                        contentSelected={contentSelected}
-                        collections={collections}
-                        updateTab={(id, content) =>
-                            this.setState({ tabs: this.updateTab(id, content) })
-                        }
-                        loadContent={(id, name, type) => this.loadContent(id, name, type)}
-                    />
+                    <div className="tab-panel">
+                        <Tab
+                            tabs={tabs}
+                            contentSelected={contentSelected}
+                            collections={collections}
+                            updateTab={(id, content) =>
+                                this.setState({ tabs: this.updateTab(id, content) })
+                            }
+                            loadContent={(id, name, type) => this.loadContent(id, name, type)}
+                        />
+                    </div>
                 </div>
             </div>
         );
@@ -186,6 +192,22 @@ export class Root extends React.Component<{}, IState> {
                 contentSelected: { ...this.state.contentSelected, tab: 'search' }
             });
         }
+    }
+
+    private loadImporterView(collectionID) {
+        const collection = this.state.collections.byID[collectionID];
+        const newTab = this.addTab(
+            {
+                view: ViewType.importer,
+                name: `Import Log: ${collection.name}`,
+                data: { collectionID: collectionID }
+            },
+            'import-result'
+        );
+        this.setState({
+            tabs: newTab.tabs,
+            contentSelected: { ...this.state.contentSelected, tab: newTab.id }
+        });
     }
 
     private loadContent(collectionID, name, type) {
@@ -268,11 +290,12 @@ export class Root extends React.Component<{}, IState> {
         });
     }
 
-    private loadQueuedImport(error, task) {
+    private loadQueuedImport(error, task, importerLog: StdOutType[]) {
         const newCollections = { ...this.state.collections };
 
         if (error !== null) {
             newCollections.byID[task.collectionID].status = ImportStatusType.error;
+            newCollections.byID[task.collectionID].importerLog = importerLog;
         } else {
             const importResult = CollectionLoader.getCollection(task.collectionID);
             const index = CollectionLoader.getCollectionIndex(importResult.docs_blob);
@@ -280,7 +303,8 @@ export class Root extends React.Component<{}, IState> {
                 ...newCollections.byID[task.collectionID],
                 index: index,
                 metadata: importResult.metadata,
-                status: ImportStatusType.imported
+                status: ImportStatusType.imported,
+                importerLog: importerLog
             };
         }
 
