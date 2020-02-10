@@ -262,11 +262,42 @@ export class CollectionLoader {
     }
 
     private static needsRefresh(collectionPath: string, collectionID: string): boolean {
+        const recursiveFilesChanged = (dir, compareDate) => {
+            // Compares all the files in the directory tree to the given date.
+            // if any of the files are new returns true, else returns false.
+            const dirs = [];
+
+            for (let file of FS.readdirSync(dir)) {
+                file = Path.join(dir, file);
+
+                const fStat = FS.statSync(file);
+                if (fStat.mtime > compareDate) {
+                    return true;
+                }
+                if (fStat.isDirectory()) {
+                    dirs.push(file);
+                }
+            }
+
+            for (const subdir of dirs) {
+                return recursiveFilesChanged(subdir, compareDate);
+            }
+
+            return false;
+        };
+
         if (FS.existsSync(this.getCachePath(collectionID))) {
-            const collection = FS.statSync(collectionPath);
+            const collectionRootStat = FS.statSync(collectionPath);
             const collectionCache = FS.statSync(this.getCachePath(collectionID));
 
-            return collection.mtime > collectionCache.mtime;
+            // The root directory has to be checked individually because this is
+            // the only place that the modified date of deleting files in the
+            // root directory is tracked
+            if (collectionRootStat.mtime > collectionCache.mtime) {
+                return true;
+            }
+
+            return recursiveFilesChanged(collectionPath, collectionCache.mtime);
         }
         return true;
     }
