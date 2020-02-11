@@ -1,28 +1,31 @@
+@import '../css-constants';
+
 .main {
-    display: flex;
+    .columns {
+        display: flex;
 
-    .resizer {
-        width: 5px;
-        border: 0px;
-        cursor: col-resize;
-        flex-shrink: 0;
-        background-color: #ededed;
-    }
+        .resizer {
+            width: 2px;
+            border: 0px;
+            cursor: col-resize;
+            flex-shrink: 0;
+            background-color: #d2d2d2;
+        }
 
-    .nav {
-        flex-shrink: 0;
-        min-width: 50px;
-    }
+        .nav {
+            flex-shrink: 0;
+            min-width: 200px;
+        }
 
-    .docs-col {
-        flex-grow: 1;
-        height: 100vh;
-        overflow-y: scroll;
-    }
+        .docs-col {
+            flex-grow: 1;
+            height: calc(100vh - #{$header-height});
 
-    .tab-panel {
-        height: calc(100vh - 50px);
-        overflow-y: scroll;
-        padding: 8px;
+            .tab-panel {
+                height: calc(100vh - #{$tab-height} - #{$header-height});
+                overflow-y: scroll;
+                padding: 8px;
+            }
+        }
     }
 }

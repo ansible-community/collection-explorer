@@ -17,9 +17,9 @@ export class Tabs extends React.Component<IProps> {
 
         return (
             <div className="pf-c-tabs tab-list">
-                <div className="pf-c-tabs__list tabs">
+                <ul className="pf-c-tabs__list tabs">
                     {Object.keys(tabs.byID).map(tabID => (
-                        <div
+                        <li
                             key={tabID}
                             className={`pf-c-tabs__item tab-container ${
                                 selectedTab === tabID ? 'pf-m-current' : ''
@@ -39,9 +39,10 @@ export class Tabs extends React.Component<IProps> {
                                     <CloseIcon />
                                 </div>
                             </div>
-                        </div>
+                        </li>
                     ))}
-                </div>
+                    <li className="pf-c-tabs__item spacer" />
+                </ul>
             </div>
         );
     }

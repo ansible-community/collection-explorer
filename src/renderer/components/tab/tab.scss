@@ -1,14 +1,28 @@
+@import '../../css-constants';
+
 .tab-list {
     // This is a set of dirty hacks to make the close button clickable. For some
     // reason patternfly tabs cover everything inside them, preventing elements
     // from recieving click events. This lifts the close button out of the tab
     // repositions it to look like it's in the tab, which makes it clickable.
     padding: 0px;
+    margin-left: -2px;
+    height: $tab-height;
+
+    .spacer {
+        flex-grow: 1;
+        height: $tab-height;
+        border-left: 1px solid #d2d2d2;
+        border-bottom: 1px solid #d2d2d2;
+    }
+
     .tab-container {
         flex: auto;
         max-width: none;
         position: relative;
         overflow: hidden;
+        flex-grow: 0;
+        flex-shrink: 0;
 
         .tab-button {
             padding-right: 36px;
@@ -38,6 +52,7 @@
     .tabs {
         display: flex;
         flex-wrap: nowrap;
+        width: 100%;
     }
 
     .pf-c-tabs__button {

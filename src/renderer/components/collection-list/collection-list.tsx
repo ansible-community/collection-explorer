@@ -8,7 +8,9 @@ import {
     FolderIcon,
     SearchIcon,
     RedoIcon,
-    ErrorCircleOIcon
+    ErrorCircleOIcon,
+    PlusIcon,
+    CogIcon
 } from '@patternfly/react-icons';
 
 import { Tooltip } from '@patternfly/react-core';
@@ -68,8 +70,33 @@ export class CollectionList extends React.Component<IProps, {}> {
         } = this.props;
         return (
             <div className="collection-nav">
+                <div className="controls">
+                    <div className="control" onClick={() => openSearch()}>
+                        <div className="inner">
+                            <CogIcon />
+                        </div>
+                    </div>
+                    <div className="control" onClick={() => openSearch()}>
+                        <div className="inner">
+                            <PlusIcon />
+                        </div>
+                    </div>
+                    <Tooltip position="bottom" content="Search Content" entryDelay={500}>
+                        <div className="control" onClick={() => openSearch()}>
+                            <div className="inner">
+                                <SearchIcon />
+                            </div>
+                        </div>
+                    </Tooltip>
+                    <Tooltip position="bottom" content="Reload Collections" entryDelay={500}>
+                        <div className="control" onClick={() => loadCollectionList()}>
+                            <div className="inner">
+                                <RedoIcon className="reload-icon" />
+                            </div>
+                        </div>
+                    </Tooltip>
+                </div>
                 <div className="pf-c-content collection-list">
-                    Collections
                     <div className="nav-container">
                         <ul>
                             {Object.keys(directories.byID).map((dirId, i) => (
@@ -145,22 +172,6 @@ export class CollectionList extends React.Component<IProps, {}> {
                             ))}
                         </ul>
                     </div>
-                </div>
-
-                <div className="controls">
-                    <div className="control" onClick={() => openSearch()}>
-                        <div className="inner">
-                            <SearchIcon />
-                        </div>
-                    </div>
-
-                    <Tooltip content="Reload Collections" entryDelay={500}>
-                        <div className="control" onClick={() => loadCollectionList()}>
-                            <div className="inner">
-                                <RedoIcon className="reload-icon" />
-                            </div>
-                        </div>
-                    </Tooltip>
                 </div>
             </div>
         );

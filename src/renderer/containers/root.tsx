@@ -72,72 +72,78 @@ export class Root extends React.Component<{}, IState> {
         const { directories, collections, tabs, contentSelected, sidebarState } = this.state;
         return (
             <div className="main">
-                <div className="nav" ref={this.navRef} style={{ width: `${sidebarState.width}px` }}>
-                    <CollectionList
-                        directories={directories}
-                        collections={collections}
-                        sidebarState={sidebarState}
-                        toggleExpand={id => this.toggleExpand(id)}
-                        loadContent={(collectionID, name, type) =>
-                            this.loadContent(collectionID, name, type)
-                        }
-                        importCollection={collectionID => this.queueCollection(collectionID)}
-                        openSearch={() => this.loadSearch()}
-                        loadCollectionList={() => this.loadCollectionList()}
-                        loadImporterView={id => this.loadImporterView(id)}
-                    />
-                </div>
-                <div
-                    className="resizer"
-                    onMouseDown={e => document.addEventListener('mousemove', this.resize)}
-                    onMouseUp={e => {
-                        document.removeEventListener('mousemove', this.resize);
-
-                        // save the current width so it can be saved when the app
-                        // closes
-                        this.setState({
-                            sidebarState: { ...this.state.sidebarState, width: e.clientX }
-                        });
-                    }}
-                />
-                <div className="docs-col">
-                    <Tabs
-                        tabs={this.state.tabs}
-                        removeTab={id => {
-                            const newTabs = this.removeTab(id);
-                            let newSelectedTab;
-                            if (id === this.state.contentSelected.tab) {
-                                newSelectedTab = Object.keys(newTabs.byID)[
-                                    Object.keys(newTabs.byID).length - 1
-                                ];
-                            } else {
-                                newSelectedTab = this.state.contentSelected.tab;
+                <div className="columns">
+                    <div
+                        className="nav"
+                        ref={this.navRef}
+                        style={{ width: `${sidebarState.width}px` }}
+                    >
+                        <CollectionList
+                            directories={directories}
+                            collections={collections}
+                            sidebarState={sidebarState}
+                            toggleExpand={id => this.toggleExpand(id)}
+                            loadContent={(collectionID, name, type) =>
+                                this.loadContent(collectionID, name, type)
                             }
+                            importCollection={collectionID => this.queueCollection(collectionID)}
+                            openSearch={() => this.loadSearch()}
+                            loadCollectionList={() => this.loadCollectionList()}
+                            loadImporterView={id => this.loadImporterView(id)}
+                        />
+                    </div>
+                    <div
+                        className="resizer"
+                        onMouseDown={e => document.addEventListener('mousemove', this.resize)}
+                        onMouseUp={e => {
+                            document.removeEventListener('mousemove', this.resize);
+
+                            // save the current width so it can be saved when the app
+                            // closes
                             this.setState({
-                                tabs: newTabs,
-                                contentSelected: {
-                                    ...this.state.contentSelected,
-                                    tab: newSelectedTab
-                                }
+                                sidebarState: { ...this.state.sidebarState, width: e.clientX }
                             });
                         }}
-                        selectedTab={this.state.contentSelected.tab}
-                        setCurrentTab={tabID =>
-                            this.setState({
-                                contentSelected: { ...this.state.contentSelected, tab: tabID }
-                            })
-                        }
                     />
-                    <div className="tab-panel">
-                        <Tab
-                            tabs={tabs}
-                            contentSelected={contentSelected}
-                            collections={collections}
-                            updateTab={(id, content) =>
-                                this.setState({ tabs: this.updateTab(id, content) })
+                    <div className="docs-col">
+                        <Tabs
+                            tabs={this.state.tabs}
+                            removeTab={id => {
+                                const newTabs = this.removeTab(id);
+                                let newSelectedTab;
+                                if (id === this.state.contentSelected.tab) {
+                                    newSelectedTab = Object.keys(newTabs.byID)[
+                                        Object.keys(newTabs.byID).length - 1
+                                    ];
+                                } else {
+                                    newSelectedTab = this.state.contentSelected.tab;
+                                }
+                                this.setState({
+                                    tabs: newTabs,
+                                    contentSelected: {
+                                        ...this.state.contentSelected,
+                                        tab: newSelectedTab
+                                    }
+                                });
+                            }}
+                            selectedTab={this.state.contentSelected.tab}
+                            setCurrentTab={tabID =>
+                                this.setState({
+                                    contentSelected: { ...this.state.contentSelected, tab: tabID }
+                                })
                             }
-                            loadContent={(id, name, type) => this.loadContent(id, name, type)}
                         />
+                        <div className="tab-panel">
+                            <Tab
+                                tabs={tabs}
+                                contentSelected={contentSelected}
+                                collections={collections}
+                                updateTab={(id, content) =>
+                                    this.setState({ tabs: this.updateTab(id, content) })
+                                }
+                                loadContent={(id, name, type) => this.loadContent(id, name, type)}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
