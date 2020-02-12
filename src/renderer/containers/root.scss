@@ -16,6 +16,11 @@
     margin: 1px;
 }
 
+#root {
+    height: 100%;
+    width: 100%;
+}
+
 .main {
     .columns {
         display: flex;
@@ -34,7 +39,11 @@
         }
 
         .docs-col {
-            flex-grow: 1;
+            flex: 1;
+
+            // https://stackoverflow.com/questions/36247140/why-dont-flex-items-shrink-past-content-size
+            min-width: 0px;
+
             height: calc(100vh - #{$header-height});
 
             .tab-panel {
