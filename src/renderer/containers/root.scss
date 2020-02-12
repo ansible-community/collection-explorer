@@ -1,5 +1,21 @@
 @import '../css-constants';
 
+::-webkit-scrollbar {
+    width: 0.5em;
+    height: 0.5em;
+}
+
+::-webkit-scrollbar-track {
+    box-shadow: none;
+    border: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
+    border-radius: 10px;
+    margin: 1px;
+}
+
 .main {
     .columns {
         display: flex;
@@ -14,7 +30,7 @@
 
         .nav {
             flex-shrink: 0;
-            min-width: 200px;
+            min-width: 160px;
         }
 
         .docs-col {
