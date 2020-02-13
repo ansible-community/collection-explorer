@@ -1,4 +1,5 @@
 import * as React from 'react';
+import './search.scss';
 
 import { TextInput } from '@patternfly/react-core';
 
@@ -36,7 +37,7 @@ export class Search extends React.Component<IProps> {
             }
         }
         return (
-            <div>
+            <div className="search-page">
                 <div>
                     <TextInput
                         aria-label="search"
@@ -51,15 +52,26 @@ export class Search extends React.Component<IProps> {
                         }
                     />
                 </div>
-                <div className="pf-c-content">
-                    <h3>Results</h3>
+                <div className="pf-c-content results">
+                    <h3>Results ({results.length})</h3>
                     <ul>
                         {results.map((v, i) => (
                             <li key={i}>
-                                <a onClick={() => loadContent(v.collectionID, v.name, v.type)}>
-                                    {collections.byID[v.collectionID].namespace}.
-                                    {collections.byID[v.collectionID].name}.{v.name} ({v.type})
-                                </a>
+                                <div>
+                                    <div>{v.name}</div>
+                                    <div>
+                                        <a
+                                            onClick={() =>
+                                                loadContent(v.collectionID, v.name, v.type)
+                                            }
+                                        >
+                                            {collections.byID[v.collectionID].namespace}.
+                                            {collections.byID[v.collectionID].name}.{v.name}
+                                        </a>
+                                    </div>
+
+                                    <div>Type: {v.type}</div>
+                                </div>
                             </li>
                         ))}
                     </ul>

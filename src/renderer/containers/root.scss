@@ -1,28 +1,56 @@
+@import '../css-constants';
+
+::-webkit-scrollbar {
+    width: 0.5em;
+    height: 0.5em;
+}
+
+::-webkit-scrollbar-track {
+    box-shadow: none;
+    border: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
+    border-radius: 10px;
+    margin: 1px;
+}
+
+#root {
+    height: 100%;
+    width: 100%;
+}
+
 .main {
-    display: flex;
+    .columns {
+        display: flex;
 
-    .resizer {
-        width: 5px;
-        border: 0px;
-        cursor: col-resize;
-        flex-shrink: 0;
-        background-color: #ededed;
-    }
+        .resizer {
+            width: 2px;
+            border: 0px;
+            cursor: col-resize;
+            flex-shrink: 0;
+            background-color: #d2d2d2;
+        }
 
-    .nav {
-        flex-shrink: 0;
-        min-width: 50px;
-    }
+        .nav {
+            flex-shrink: 0;
+            min-width: 160px;
+        }
 
-    .docs-col {
-        flex-grow: 1;
-        height: 100vh;
-        overflow-y: scroll;
-    }
+        .docs-col {
+            flex: 1;
 
-    .tab-panel {
-        height: calc(100vh - 50px);
-        overflow-y: scroll;
-        padding: 8px;
+            // https://stackoverflow.com/questions/36247140/why-dont-flex-items-shrink-past-content-size
+            min-width: 0px;
+
+            height: calc(100vh - #{$header-height});
+
+            .tab-panel {
+                height: calc(100vh - #{$tab-height} - #{$header-height});
+                overflow-y: scroll;
+                padding: 8px;
+            }
+        }
     }
 }
