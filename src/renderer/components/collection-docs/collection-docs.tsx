@@ -8,11 +8,12 @@ import {
     EmptyStateVariant,
     Title,
     EmptyStateIcon,
-    Tooltip
+    Tooltip,
+    Alert
 } from '@patternfly/react-core';
 
 import { WarningTriangleIcon } from '@patternfly/react-icons';
-import { RenderPluginDoc, DocsNav } from 'ansible-doc-renderer';
+import { RenderPluginDoc } from '@ansible/galaxy-doc-builder';
 import { RedoIcon } from '@patternfly/react-icons';
 
 import { CollectionsType, HTMLViewType, PluginViewType, ViewType } from '../../../types';
@@ -56,16 +57,21 @@ export class CollectionDocs extends React.Component<IProps> {
                                 }}
                             />
                         ) : (
-                            <RenderPluginDoc
-                                renderModuleLink={s => <span>{s}</span>}
-                                renderDocLink={(s, s1) => <span>{s}</span>}
-                                renderTableOfContentsLink={(title, section) => (
-                                    <Scrollchor key={section} to={'#' + section}>
-                                        {title}
-                                    </Scrollchor>
-                                )}
-                                plugin={(data as PluginViewType).plugin}
-                            />
+                            <div className="pf-c-content">
+                                <RenderPluginDoc
+                                    renderModuleLink={s => <span>{s}</span>}
+                                    renderDocLink={(s, s1) => <span>{s}</span>}
+                                    renderTableOfContentsLink={(title, section) => (
+                                        <Scrollchor key={section} to={'#' + section}>
+                                            {title}
+                                        </Scrollchor>
+                                    )}
+                                    plugin={(data as PluginViewType).plugin}
+                                    renderWarning={text => (
+                                        <Alert isInline variant="warning" title={text} />
+                                    )}
+                                />
+                            </div>
                         )}
                     </div>
                 </div>
