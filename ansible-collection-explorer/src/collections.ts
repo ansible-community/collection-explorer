@@ -1,55 +1,163 @@
 import * as vscode from 'vscode';
-import { getCollectionPaths } from './lib';
+import { CollectionPathFinder, CollectionLoader, ImportManager } from './lib';
+import { execSync } from 'child_process';
+import {
+  CollectionsType,
+  DirectoriesType,
+  CollectionType,
+  ImportStatusType,
+  DocsEntryType
+} from './types';
 
 export class NodeDependenciesProvider implements vscode.TreeDataProvider<CollectionTree> {
-  constructor(private workspaceRoot: string) {}
+  private collections: { name: string; namespace: string; path: string; id: string }[];
 
-  getTreeItem(element: CollectionTree): vscode.TreeItem {
-    return element;
+  private collectionData: { byID: { [key: string]: Promise<CollectionType> } };
+
+  private importCollection(path, id): CollectionType {
+    return {} as CollectionType;
   }
 
-  getChildren(element?: CollectionTree): Thenable<CollectionTree[]> {
-    if (!element) {
-      return new Promise<CollectionTree[]>((resolve, reject) =>
-        getCollectionPaths().then(paths => {
-          const children: CollectionTree[] = [];
-          for (const path of paths) {
-            children.push(
-              new CollectionTree(path, '', 'dir', vscode.TreeItemCollapsibleState.Collapsed)
-            );
-          }
-          resolve(children);
-        })
-      );
-    }
-    // return Promise.resolve([]);
+  constructor(private workspaceRoot: string) {
+    const data = CollectionLoader.getCollectionList();
+    this.collections = [];
+    this.collectionData = { byID: {} };
 
-    // const children: CollectionTree[] = [];
-    // for (let i = 0; i < 10; i++) {
-    //   children.push(
-    //     new CollectionTree('hi', 'hi', 'dir', vscode.TreeItemCollapsibleState.Collapsed)
-    //   );
-    // }
-    // return Promise.resolve(children);
+    for (const id in data.collections.byID) {
+      // Load the basic collection data into an array that will be used to populate
+      // the top level list of collections
+      const collection = data.collections.byID[id];
+      this.collections.push({
+        name: collection.name,
+        namespace: collection.namespace,
+        path: collection.path,
+        id: id
+      });
+
+      // If the collection has an index that means that it has already been loaded
+      // and is up to date, so all that needs to be done is return the collection
+      // as part of the promise
+      if (collection.index) {
+        this.collectionData.byID[id] = new Promise(resolve => {
+          resolve(collection);
+        });
+      } else {
+        // If the index doesn't exist, load the collection via the galaxy-importer
+        this.collectionData.byID[id] = new Promise((resolve, reject) => {
+          console.log(`Executing tasking. Import: ${collection.name}`);
+          CollectionLoader.importCollection(collection.path, id, {
+            onStandardErr: msg => console.error(msg.toString())
+          })
+            .then(() => {
+              const importResult = CollectionLoader.getCollection(id);
+              const index = CollectionLoader.getCollectionIndex(importResult.docs_blob);
+              resolve({
+                name: collection.name,
+                namespace: collection.namespace,
+                path: collection.path,
+                index: index,
+                metadata: importResult.metadata,
+                status: ImportStatusType.imported
+              });
+            })
+            .catch(err => reject(err));
+        });
+      }
+    }
+  }
+
+  getTreeItem(parent: CollectionTree): vscode.TreeItem {
+    return parent;
+  }
+
+  getChildren(parent?: CollectionTree): Thenable<CollectionTree[]> {
+    if (!parent) {
+      const children: CollectionTree[] = [];
+      for (const collection of this.collections) {
+        children.push(
+          new CollectionTree({
+            label: `${collection.namespace}.${collection.namespace}`,
+            itemType: 'collection',
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            collectionID: collection.id
+          })
+        );
+      }
+
+      return Promise.resolve(children);
+    } else {
+      return new Promise<CollectionTree[]>((resolve, reject) => {
+        this.collectionData.byID[parent.config.collectionID]
+          .then((collection: CollectionType) => {
+            const children: CollectionTree[] = [];
+
+            switch (parent.config.itemType) {
+              case 'collection':
+                for (const key in collection.index) {
+                  const cat = collection.index[key];
+                  if (cat.length !== 0) {
+                    children.push(
+                      new CollectionTree({
+                        label: key,
+                        itemType: 'category',
+                        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                        collectionID: parent.config.collectionID
+                      })
+                    );
+                  }
+                }
+                resolve(children);
+                break;
+
+              case 'category':
+                for (const content of collection.index[parent.config.label]) {
+                  children.push(
+                    new CollectionTree({
+                      label: content.display,
+                      collapsibleState: vscode.TreeItemCollapsibleState.None,
+                      itemType: 'content',
+                      collectionID: parent.config.collectionID
+                    })
+                  );
+                }
+                resolve(children);
+                break;
+
+              default:
+                reject();
+                break;
+            }
+          })
+          .catch(() => {
+            vscode.window.showErrorMessage('Error loading collection');
+            reject();
+          });
+      });
+    }
   }
 }
 
 class CollectionTree extends vscode.TreeItem {
   constructor(
-    public readonly label: string,
-    private version: string,
-    public readonly itemType: 'dir' | 'collection' | 'category' | 'content',
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState
+    public config: {
+      label: string;
+      collapsibleState: vscode.TreeItemCollapsibleState;
+      itemType: 'collection' | 'category' | 'content';
+      collectionID: string;
+      contentDate?: DocsEntryType;
+      description?: string;
+      tooltip?: string;
+    }
   ) {
-    super(label, collapsibleState);
+    super(config.label, config.collapsibleState);
   }
 
   get tooltip(): string {
-    return this.label;
+    return this.config.tooltip || this.label;
   }
 
   get description(): string {
-    return this.version;
+    return this.config.description;
   }
 
   // iconPath = {

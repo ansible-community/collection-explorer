@@ -37,16 +37,10 @@ class CollectionLoader {
             let exe;
             let path;
             const args = [];
-            // if running in production mode, use the bundled python scripts
-            if (process.env.NODE_ENV === 'production') {
-                exe = Path.join(rootDir, 'python', 'dist', 'importer_wrapper', 'importer_wrapper');
-                path = `${Path.join(rootDir, 'python', 'dist', 'ansible-doc')}:${Path.join(rootDir, 'python', 'dist', 'ansible-lint')}:${process.env.PATH}`;
-            }
-            else {
-                exe = 'python';
-                path = process.env.PATH;
-                args.push('python/importer_wrapper.py');
-            }
+            // TODO configure python executable
+            exe = 'python3';
+            path = process.env.PATH;
+            args.push('python/importer_wrapper.py');
             const p = child_process_1.spawn(exe, args.concat([collection_path, this.getCachePath(collectionID)]), {
                 env: {
                     PATH: path
@@ -61,11 +55,8 @@ class CollectionLoader {
                 if (callbacks && callbacks.onStandardErr) {
                     callbacks.onStandardErr(data);
                 }
-                // console.error(`stderr: ${data}`);
             });
             p.on('exit', code => {
-                // this.setState({ collection: JSON.parse(allData.join()) });
-                // console.log(JSON.parse(allData.join()));
                 if (code === 0) {
                     resolve(code);
                 }
