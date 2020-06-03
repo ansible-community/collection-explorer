@@ -4,6 +4,7 @@ import { DocsEntryType } from './types';
 import { DocLoader } from './view/doc-loader';
 import { execSync } from 'child_process';
 import * as Path from 'path';
+import { CollectionLoader } from './lib';
 
 export function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('ansibleCollections');
@@ -20,13 +21,15 @@ export function activate(context: vscode.ExtensionContext) {
         ' env the extension uses in settings.'
     );
   } else {
+    const loader = new CollectionLoader(context.globalStoragePath);
+
     vscode.window.createTreeView('ansibleCollections', {
-      treeDataProvider: new CollectionTreeProvider(context)
+      treeDataProvider: new CollectionTreeProvider(loader, context)
     });
     vscode.commands.registerCommand(
       'ansibleCollections.loadCollectionDoc',
       (collectionID: string, contentIdentifiers: DocsEntryType) => {
-        DocLoader.loadDoc(collectionID, contentIdentifiers, context);
+        DocLoader.loadDoc(collectionID, contentIdentifiers, context, loader);
       }
     );
   }

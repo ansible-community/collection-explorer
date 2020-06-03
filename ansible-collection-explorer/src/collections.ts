@@ -7,9 +7,12 @@ export class CollectionTreeProvider implements vscode.TreeDataProvider<Collectio
   private collections: { name: string; namespace: string; path: string; id: string }[];
   private collectionData: { byID: { [key: string]: Promise<CollectionType> } };
 
-  constructor(private context: vscode.ExtensionContext) {
-    const data = CollectionLoader.getCollectionList();
-    const importerScript = Path.join(context.extensionPath, 'python', 'importer_wrapper.py');
+  constructor(
+    private collectionLoader: CollectionLoader,
+    private context: vscode.ExtensionContext
+  ) {
+    const data = this.collectionLoader.getCollectionList();
+    const importerScript = Path.join(this.context.extensionPath, 'python', 'importer_wrapper.py');
     this.collections = [];
     this.collectionData = { byID: {} };
 
@@ -36,13 +39,14 @@ export class CollectionTreeProvider implements vscode.TreeDataProvider<Collectio
         // If the index doesn't exist, load the collection via the galaxy-importer
         this.collectionData.byID[id] = new Promise((resolve, reject) => {
           console.log(`Executing tasking. Import: ${collection.name}`);
-          CollectionLoader.importCollection(collection.path, id, {
-            onStandardErr: msg => console.error(msg.toString()),
-            virtualenv: config.pythonVirtualEnvironment,
-            importerScript: importerScript
-          })
+          this.collectionLoader
+            .importCollection(collection.path, id, {
+              onStandardErr: msg => console.error(msg.toString()),
+              virtualenv: config.pythonVirtualEnvironment,
+              importerScript: importerScript
+            })
             .then(() => {
-              const importResult = CollectionLoader.getCollection(id);
+              const importResult = this.collectionLoader.getCollection(id);
               const index = CollectionLoader.getCollectionIndex(importResult.docs_blob);
               console.log(`Import done: ${collection.name}`);
 

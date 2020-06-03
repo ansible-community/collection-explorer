@@ -4,8 +4,13 @@ import { DocsEntryType } from '../types';
 import * as vscode from 'vscode';
 
 export class DocLoader {
-  static loadDoc(collectionID: string, contentIdentifiers: DocsEntryType, context: vscode.ExtensionContext) {
-    const importResult = CollectionLoader.getCollection(collectionID);
+  static loadDoc(
+    collectionID: string,
+    contentIdentifiers: DocsEntryType,
+    context: vscode.ExtensionContext,
+    collectionLoader: CollectionLoader
+  ) {
+    const importResult = collectionLoader.getCollection(collectionID);
     const content = CollectionLoader.getContent(
       importResult,
       contentIdentifiers.name,
@@ -18,7 +23,9 @@ export class DocLoader {
       vscode.ViewColumn.Active,
       {
         enableScripts: true,
-        localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'plugin-render-dist'))]
+        localResourceRoots: [
+          vscode.Uri.file(path.join(context.extensionPath, 'plugin-render-dist'))
+        ]
       }
     );
 

@@ -11,11 +11,19 @@ import {
   ImporterResultType,
   ImportStatusType
 } from '../types';
-import { CollectionPathFinder, getBasePath, StateHelper, Config } from '../lib';
+import { CollectionPathFinder, StateHelper } from '../lib';
 
 export class CollectionLoader {
+  private cacheDir: string;
+  constructor(private storageDir: string) {
+    this.cacheDir = Path.join(storageDir, 'collection_cache');
+    if (!FS.existsSync(this.cacheDir) || !FS.statSync(this.cacheDir).isDirectory()) {
+      FS.mkdirSync(this.cacheDir, { recursive: true });
+    }
+  }
+
   // Returns a list of directories with their respective collections
-  static getCollectionList(): { collections: CollectionsType; directories: DirectoriesType } {
+  getCollectionList(): { collections: CollectionsType; directories: DirectoriesType } {
     const directories: DirectoriesType = { byID: {} };
     const collections: CollectionsType = { byID: {} };
     const collection_paths = CollectionPathFinder.getPaths();
@@ -34,7 +42,7 @@ export class CollectionLoader {
     return { collections: collections, directories: directories };
   }
 
-  static getCollection(collectionID: string): ImporterResultType {
+  getCollection(collectionID: string): ImporterResultType {
     try {
       return JSON.parse(FS.readFileSync(this.getCachePath(collectionID)).toString());
     } catch {
@@ -42,7 +50,7 @@ export class CollectionLoader {
     }
   }
 
-  static importCollection(
+  importCollection(
     collection_path: string,
     collectionID: string,
     configs?: {
@@ -53,7 +61,6 @@ export class CollectionLoader {
     }
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      const rootDir = getBasePath();
       let exe: string;
       let path: string;
       const args = [];
@@ -215,7 +222,7 @@ export class CollectionLoader {
     return null;
   }
 
-  private static loadDir(collectionsDir): CollectionsType {
+  private loadDir(collectionsDir): CollectionsType {
     // Returns a list of collection in a given directory
     const collections: CollectionsType = { byID: {} };
     for (const ns of FS.readdirSync(collectionsDir)) {
@@ -225,7 +232,7 @@ export class CollectionLoader {
 
           if (
             FS.statSync(collectionDir).isDirectory() &&
-            this.isCollection(FS.readdirSync(collectionDir))
+            CollectionLoader.isCollection(FS.readdirSync(collectionDir))
           ) {
             const collectionPath = Path.join(collectionsDir, ns, collection);
             const id = StateHelper.getID(collectionPath);
@@ -240,7 +247,7 @@ export class CollectionLoader {
               status = ImportStatusType.imported;
 
               if (importerData) {
-                index = this.getCollectionIndex(importerData.docs_blob);
+                index = CollectionLoader.getCollectionIndex(importerData.docs_blob);
                 metadata = importerData.metadata;
               }
             }
@@ -261,7 +268,7 @@ export class CollectionLoader {
     return collections;
   }
 
-  private static needsRefresh(collectionPath: string, collectionID: string): boolean {
+  private needsRefresh(collectionPath: string, collectionID: string): boolean {
     const recursiveFilesChanged = (dir, compareDate) => {
       // Compares all the files in the directory tree to the given date.
       // if any of the files are new returns true, else returns false.
@@ -302,8 +309,8 @@ export class CollectionLoader {
     return true;
   }
 
-  private static getCachePath(collectionID) {
-    return Path.join(Config.getCacheDir(), collectionID);
+  private getCachePath(collectionID) {
+    return Path.join(this.cacheDir, collectionID);
   }
 
   private static isCollection(files: string[]): boolean {
