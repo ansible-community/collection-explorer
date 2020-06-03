@@ -1,22 +1,11 @@
 import * as vscode from 'vscode';
-import { CollectionPathFinder, CollectionLoader, ImportManager } from './lib';
-import { execSync } from 'child_process';
-import {
-  CollectionsType,
-  DirectoriesType,
-  CollectionType,
-  ImportStatusType,
-  DocsEntryType
-} from './types';
+import { CollectionLoader } from './lib';
+import { CollectionType, ImportStatusType, DocsEntryType } from './types';
 
-export class NodeDependenciesProvider implements vscode.TreeDataProvider<CollectionTree> {
+export class CollectionTreeProvider implements vscode.TreeDataProvider<CollectionTree> {
   private collections: { name: string; namespace: string; path: string; id: string }[];
 
   private collectionData: { byID: { [key: string]: Promise<CollectionType> } };
-
-  private importCollection(path, id): CollectionType {
-    return {} as CollectionType;
-  }
 
   constructor(private workspaceRoot: string) {
     const data = CollectionLoader.getCollectionList();
@@ -46,11 +35,13 @@ export class NodeDependenciesProvider implements vscode.TreeDataProvider<Collect
         this.collectionData.byID[id] = new Promise((resolve, reject) => {
           console.log(`Executing tasking. Import: ${collection.name}`);
           CollectionLoader.importCollection(collection.path, id, {
-            onStandardErr: msg => console.error(msg.toString())
+            // onStandardErr: msg => console.error(msg.toString())
           })
             .then(() => {
               const importResult = CollectionLoader.getCollection(id);
               const index = CollectionLoader.getCollectionIndex(importResult.docs_blob);
+              console.log(`Import done: ${collection.name}`);
+
               resolve({
                 name: collection.name,
                 namespace: collection.namespace,
@@ -76,7 +67,7 @@ export class NodeDependenciesProvider implements vscode.TreeDataProvider<Collect
       for (const collection of this.collections) {
         children.push(
           new CollectionTree({
-            label: `${collection.namespace}.${collection.namespace}`,
+            label: `${collection.namespace}.${collection.name}`,
             itemType: 'collection',
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             collectionID: collection.id
@@ -116,7 +107,12 @@ export class NodeDependenciesProvider implements vscode.TreeDataProvider<Collect
                       label: content.display,
                       collapsibleState: vscode.TreeItemCollapsibleState.None,
                       itemType: 'content',
-                      collectionID: parent.config.collectionID
+                      collectionID: parent.config.collectionID,
+                      command: {
+                        command: 'ansibleCollections.loadCollectionDoc',
+                        title: 'Load Collection Documentation',
+                        arguments: [parent.config.collectionID, content]
+                      }
                     })
                   );
                 }
@@ -144,12 +140,17 @@ class CollectionTree extends vscode.TreeItem {
       collapsibleState: vscode.TreeItemCollapsibleState;
       itemType: 'collection' | 'category' | 'content';
       collectionID: string;
-      contentDate?: DocsEntryType;
       description?: string;
       tooltip?: string;
+      command?: {
+        command: string;
+        title: string;
+        arguments: any[];
+      };
     }
   ) {
     super(config.label, config.collapsibleState);
+    this.command = config.command;
   }
 
   get tooltip(): string {
