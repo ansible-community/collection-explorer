@@ -1,17 +1,19 @@
 import * as vscode from 'vscode';
 import { CollectionLoader } from './lib';
 import { CollectionType, ImportStatusType, DocsEntryType } from './types';
+import * as Path from 'path';
 
 export class CollectionTreeProvider implements vscode.TreeDataProvider<CollectionTree> {
   private collections: { name: string; namespace: string; path: string; id: string }[];
-
   private collectionData: { byID: { [key: string]: Promise<CollectionType> } };
 
-  constructor(private workspaceRoot: string) {
+  constructor(private context: vscode.ExtensionContext) {
     const data = CollectionLoader.getCollectionList();
+    const importerScript = Path.join(context.extensionPath, 'python', 'importer_wrapper.py');
     this.collections = [];
     this.collectionData = { byID: {} };
 
+    const config = vscode.workspace.getConfiguration('ansibleCollections');
     for (const id in data.collections.byID) {
       // Load the basic collection data into an array that will be used to populate
       // the top level list of collections
@@ -35,7 +37,9 @@ export class CollectionTreeProvider implements vscode.TreeDataProvider<Collectio
         this.collectionData.byID[id] = new Promise((resolve, reject) => {
           console.log(`Executing tasking. Import: ${collection.name}`);
           CollectionLoader.importCollection(collection.path, id, {
-            // onStandardErr: msg => console.error(msg.toString())
+            onStandardErr: msg => console.error(msg.toString()),
+            virtualenv: config.pythonVirtualEnvironment,
+            importerScript: importerScript
           })
             .then(() => {
               const importResult = CollectionLoader.getCollection(id);

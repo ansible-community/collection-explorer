@@ -27,7 +27,17 @@
         "command": "ansibleCollections.loadCollectionDoc",
         "title": "Load Collection Documentation"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Ansible Collection Explorer",
+      "properties": {
+        "ansibleCollections.pythonVirtualEnvironment": {
+          "type": "string",
+          "default": "",
+          "description": "Run python out of a virtual environment instead of using the global system python."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

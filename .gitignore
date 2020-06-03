@@ -7,3 +7,4 @@ build/
 python/generated/
 ansible-collection-explorer/out/
 ansible-collection-explorer/plugin-render-dist/
+.vscode

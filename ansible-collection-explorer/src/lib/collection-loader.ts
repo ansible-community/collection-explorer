@@ -45,18 +45,33 @@ export class CollectionLoader {
   static importCollection(
     collection_path: string,
     collectionID: string,
-    callbacks?: { onStandardErr?: (message) => void; onStandardOut?: (message) => void }
+    configs?: {
+      virtualenv?: string;
+      onStandardErr?: (message) => void;
+      onStandardOut?: (message) => void;
+      importerScript?: string;
+    }
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       const rootDir = getBasePath();
       let exe: string;
       let path: string;
       const args = [];
+      let importerScript = 'python/importer_wrapper.py';
+
+      if (configs && configs.importerScript) {
+        importerScript = configs.importerScript;
+      }
 
       // TODO configure python executable
-      exe = 'python3';
+      exe = 'python';
       path = process.env.PATH;
-      args.push('python/importer_wrapper.py');
+
+      if (configs && configs.virtualenv) {
+        path = `${Path.join(configs.virtualenv, '/bin/')}:${path}`;
+      }
+
+      args.push(importerScript);
 
       const p = spawn(exe, args.concat([collection_path, this.getCachePath(collectionID)]), {
         env: {
@@ -65,13 +80,13 @@ export class CollectionLoader {
       });
 
       p.stdout.on('data', data => {
-        if (callbacks && callbacks.onStandardOut) {
-          callbacks.onStandardOut(data);
+        if (configs && configs.onStandardOut) {
+          configs.onStandardOut(data);
         }
       });
       p.stderr.on('data', data => {
-        if (callbacks && callbacks.onStandardErr) {
-          callbacks.onStandardErr(data);
+        if (configs && configs.onStandardErr) {
+          configs.onStandardErr(data);
         }
       });
       p.on('exit', code => {
