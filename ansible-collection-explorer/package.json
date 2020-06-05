@@ -1,6 +1,7 @@
 {
   "name": "ansible-collection-explorer",
   "displayName": "AnsibleCollectionExplorer",
+  "publisher": "newswangerd",
   "description": "View documentation for ansible collections.",
   "version": "0.0.1",
   "engines": {

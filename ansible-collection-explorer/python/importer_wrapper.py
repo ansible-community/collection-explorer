@@ -23,8 +23,6 @@ def main():
     data = collection.CollectionLoader(
         filepath, filepath, cfg=cfg, logger=logging).load()
 
-    # probably shouldn't cache the importer in the collection dir since we may
-    # not have write access to it
     json_data = json.dumps(attr.asdict(data), indent=2)
 
     with open(os.path.join(savepath), 'w+') as output_file:
